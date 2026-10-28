@@ -11,10 +11,10 @@ Run `python3 scripts/verify_foundation.py` at any location within a Git checkout
 The command fails (non-zero exit) when any of these contracts fail:
 
 1. Tracked Markdown files contain simple relative Markdown links pointing to missing files/directories or outside the repository. External URLs and fragment-only links are not checked; heading anchors and non-Markdown references are not checked.
-2. Generated-output or local-secret paths covered by the repository policy are already tracked by Git. This is a path-hygiene check, **not** secret-content detection.
+2. Tracked paths are forbidden by the effective **tracked** `.gitignore` policy, using Git semantics for nested paths, directories, globs, and negation exceptions. User-global excludes, local `.git/info/exclude`, and untracked `.gitignore` files do not define repository policy. This is a path-hygiene check, **not** secret-content detection.
 3. Representative local credential, cache and generated-output paths are not ignored by Git, or `.env.example` is accidentally ignored.
 
-The same command is invoked by [foundation CI](../.github/workflows/foundation.yml) on pull requests and pushes to `main`. CI has read-only contents permission and does not provision test subjects, install project dependencies, or execute external targets. A successful check establishes only these foundation invariants at the tested commit; it does not establish platform/device/production usability.
+The command and focused standard-library regression tests (`python3 -m unittest discover -s tests -p "test_*.py" -v`) run in [foundation CI](../.github/workflows/foundation.yml) on pull requests and pushes to `main`. The workflow explicitly checks out the pull-request **head commit** (not GitHub’s synthetic merge ref) and prints the checked-out SHA. CI has read-only contents permission and does not provision test subjects, install project dependencies, or execute external targets. A successful check establishes only these foundation invariants at the tested commit; it does not establish platform/device/production usability.
 
 ## Future implementation boundaries (not implemented)
 
