@@ -1,0 +1,19 @@
+# Local credentials and configuration (examples may be committed deliberately)
+.env
+.env.*
+!.env.example
+
+# Developer environments and language caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+node_modules/
+
+# Generated local test and measurement outputs, not curated fixtures
+artifacts/
+test-results/
+playwright-report/
+tmp/
