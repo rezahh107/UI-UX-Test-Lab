@@ -16,12 +16,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from PySide6 import __version__ as PYSIDE_VERSION
-from PySide6.QtCore import QPoint, Qt, qVersion, QCoreApplication
+from PySide6.QtCore import QPoint, QRect, Qt, qVersion, QCoreApplication
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontInfo, QGuiApplication, QImage, QPainter, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QStyleFactory, QVBoxLayout, QWidget,
+    QLabel, QLineEdit, QPushButton, QStyle, QStyleFactory, QStyleOptionButton, QVBoxLayout, QWidget,
 )
 from . import source_probe as metrics
 
@@ -31,7 +31,8 @@ STATES = ("idle", "focus", "hover", "pressed", "checked", "unchecked",
 FIELDS = ("candidate", "style_requested", "style_effective", "variant", "state",
           "execution", "measurement", "assessment", "rendered", "method",
           "semantic_ok", "reason", "logical_geometry", "physical_pixels",
-          "dpr", "palette_text_surface_contrast", "rendered_card_pixel",
+          "dpr", "palette_text_surface_contrast", "palette_text_card_contrast",
+          "host_exceeds_screen", "rendered_card_pixel",
           "card_qss_local", "filename")
 
 
@@ -215,10 +216,15 @@ def capture_state(host, controls, state):
         method = "QTest.mousePress simulated; isDown(); widget.grab()"
     elif state == "checked":
         approval.setFocus(Qt.FocusReason.TabFocusReason)
+        # Click away from the native indicator: verify the whole row hit region.
+        QTest.mouseClick(approval, Qt.MouseButton.LeftButton,
+                         pos=QPoint(5, approval.height() // 2))
+        row_click_ok = approval.isChecked()
+        approval.setChecked(False)
         QTest.keyClick(approval, Qt.Key.Key_Space)
-        semantic = approval.isChecked()
+        semantic = row_click_ok and approval.isChecked()
         target = approval
-        method = "QTest.keyClick(Space); isChecked(); widget.grab()"
+        method = "QTest.mouseClick(full row) + keyClick(Space); isChecked(); widget.grab()"
     elif state == "unchecked":
         approval.setFocus(Qt.FocusReason.TabFocusReason)
         QTest.keyClick(approval, Qt.Key.Key_Space)
@@ -262,16 +268,25 @@ def capture_state(host, controls, state):
     return image, target_image, target, method, bool(semantic), focus_actual
 
 
-def compare_targets(state, target_shot, base):
-    # Static pixel deltas never substitute for state semantics.
-    if state in ("idle", "unchecked"):
-        return None
-    key = ("approval" if state == "checked" else
-           "combo" if state in ("combo_selected", "combo_popup") else
-           "error" if state == "invalid" else "button")
-    if state in ("combo_popup", "invalid"):
-        return None  # visibility/geometry is the relevant independent check
-    return metrics.difference(base[key], target_shot)["changed"]
+def compare_targets(state, target_shot, base, widget):
+    # Preserve the upstream RGB threshold, but compare checkbox INDICATOR,
+    # not an entire 52px-wide row: a 10px checkmark can be <0.1% of row pixels.
+    if state in ("idle", "unchecked", "combo_popup", "invalid"):
+        return None  # semantic and view visibility are checked independently
+    key = "approval" if state == "checked" else (
+        "combo" if state == "combo_selected" else "button")
+    before = base[key]
+    if state == "checked":
+        option = QStyleOptionButton()
+        option.initFrom(widget)
+        logical = widget.style().subElementRect(
+            QStyle.SubElement.SE_CheckBoxIndicator, option, widget)
+        dpr = target_shot.devicePixelRatio()
+        physical = QRect(round(logical.x() * dpr), round(logical.y() * dpr),
+                         max(1, round(logical.width() * dpr)),
+                         max(1, round(logical.height() * dpr)))
+        before, target_shot = before.copy(physical), target_shot.copy(physical)
+    return metrics.difference(before, target_shot)["changed"]
 
 
 def make_sheet(images, candidate, out):
@@ -398,6 +413,15 @@ def run(config, config_hash, out, scale_tag):
                 palette_contrast = metrics.contrast(
                     (color_fg.red(), color_fg.green(), color_fg.blue()),
                     (color_bg.red(), color_bg.green(), color_bg.blue()))
+                # QLabel is drawn using WindowText, whereas the card's requested
+                # background is from QSS or the QPalette Window role.
+                card_background = QColor(config["card_qss"]["background"]) if variant["scoped_qss"] else palette.color(QPalette.ColorRole.Window)
+                label_foreground = palette.color(QPalette.ColorRole.WindowText)
+                card_contrast = metrics.contrast(
+                    (card_background.red(), card_background.green(), card_background.blue()),
+                    (label_foreground.red(), label_foreground.green(), label_foreground.blue()))
+                exceeds_screen = (host.width() > screen.availableGeometry().width() or
+                                  host.height() > screen.availableGeometry().height())
                 env["variants"][candidate] = {
                     "execution": "EXECUTED", "style_requested": requested,
                     "style_effective": actual_style,
@@ -407,6 +431,9 @@ def run(config, config_hash, out, scale_tag):
                     "native_control_qss_empty": all(not w[name].styleSheet()
                         for name in ("button", "approval", "combo", "amount")),
                     "font_resolved": QFontInfo(host.font()).family(),
+                    "calculated_windowtext_card_contrast": card_contrast,
+                    "host_exceeds_screen_logical": exceeds_screen,
+                    "note": "role-pair contrast not rendered glyph pixel contrast",
                 }
                 baseline = {key: widget.grab() for key, widget in (
                     ("button", w["button"]), ("approval", w["approval"]),
@@ -415,7 +442,12 @@ def run(config, config_hash, out, scale_tag):
                 for state in STATES:
                     full, target, widget, method, semantic, focus = capture_state(host, w, state)
                     snapshots[state] = full
-                    rendered = compare_targets(state, target, baseline)
+                    rendered = compare_targets(state, target, baseline, widget)
+                    if state == "combo_popup":
+                        # A popup is a separate Qt window; host.grab() omits it.
+                        popup_path = out / f"contact_sheet_{candidate}_popup.png"
+                        if not target.save(str(popup_path)):
+                            raise RuntimeError("Cannot capture separate native combo popup")
                     physical = target.toImage().size()
                     rect = widget.geometry()
                     card_img = w["card"].grab().toImage()
@@ -438,6 +470,8 @@ def run(config, config_hash, out, scale_tag):
                         physical_pixels=f"{physical.width()}x{physical.height()}",
                         dpr=target.devicePixelRatio(),
                         palette_text_surface_contrast=palette_contrast,
+                        palette_text_card_contrast=card_contrast,
+                        host_exceeds_screen=exceeds_screen,
                         rendered_card_pixel=metrics.hex_rgb(pixel),
                         card_qss_local=scope_ok,
                         filename=f"contact_sheet_{candidate}.png",
@@ -473,6 +507,8 @@ def run(config, config_hash, out, scale_tag):
         "Semantic FAIL: " + str(len(failed)),
         "NOT_RENDERED states: " + str(len(not_rendered)),
         "Low-contrast negative control: " + ("DETECTED" if env["negative_controls"]["low_contrast"]["detected"] else "MISSED"),
+        "Candidate low role contrast (<4.5): " + ", ".join(k for k,v in env["variants"].items() if v.get("calculated_windowtext_card_contrast", 99) < 4.5),
+        "Window larger than logical screen: " + ", ".join(k for k,v in env["variants"].items() if v.get("host_exceeds_screen_logical")),
         "", "## Missing visual changes", "",
     ] + [f"- {r['candidate']} / {r['state']}" for r in not_rendered] + [
         "", "## Limitations",
