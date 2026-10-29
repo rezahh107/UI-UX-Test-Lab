@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PySide6 import __version__ as PYSIDE_VERSION
 from PySide6.QtCore import QPoint, QRect, Qt, qVersion, QCoreApplication
-from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontInfo, QGuiApplication, QImage, QPainter, QPalette
+from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontInfo, QGuiApplication, QImage, QPainter, QPalette, QPixmap
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout,
@@ -229,12 +229,15 @@ def capture_state(host, controls, state):
         target = approval
         method = "QTest.mouseClick(full row) + keyClick(Space); isChecked(); widget.grab()"
     elif state == "unchecked":
+        # Establish and verify the precondition before the one real transition.
+        # A no-op QTest input must leave checked=True and fail validation.
+        approval.setChecked(True)
+        initially_checked = approval.isChecked()
         approval.setFocus(Qt.FocusReason.TabFocusReason)
         QTest.keyClick(approval, Qt.Key.Key_Space)
-        QTest.keyClick(approval, Qt.Key.Key_Space)
-        semantic = not approval.isChecked()
+        semantic = initially_checked and not approval.isChecked()
         target = approval
-        method = "QTest.keyClick(Space twice); isChecked(); widget.grab()"
+        method = "setChecked(True) confirmed; QTest.keyClick(Space once); checked-to-unchecked verified; widget.grab()"
     elif state == "disabled":
         button.setEnabled(False)
         semantic = not button.isEnabled() and not controls["disabled_input"].isEnabled()
@@ -292,6 +295,40 @@ def compare_targets(state, target_shot, base, widget):
                          max(1, round(logical.height() * dpr)))
         before, target_shot = before.copy(physical), target_shot.copy(physical)
     return metrics.difference(before, target_shot)["changed"]
+
+
+def assessed_result(semantic, rendered):
+    """Keep semantic failure distinct from visually inconclusive states."""
+    if not semantic:
+        return "FAIL"
+    return "INCONCLUSIVE" if rendered is False else "PASS"
+
+
+def record_state_frame(host, widget, state, full, target, baseline, method, snapshots):
+    """Record the final accepted state, never the superseded hover attempt."""
+    rendered = compare_targets(state, target, baseline, widget)
+    if state == "hover" and rendered is False:
+        # This is a *simulated* hover fallback, not physical pointer evidence.
+        widget.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, True)
+        QCoreApplication.processEvents()
+        QTest.qWait(45)
+        alternative = widget.grab()
+        if compare_targets(state, alternative, baseline, widget):
+            target = alternative
+            rendered = True
+            # Compose the accepted QWidget.grab() directly into the new
+            # host frame so the saved contact sheet cannot retain the rejected
+            # pre-fallback pixels. This composition is diagnostic, not a
+            # physical desktop screenshot.
+            full = QPixmap(host.grab())
+            painter = QPainter(full)
+            painter.drawPixmap(widget.mapTo(host, QPoint(0, 0)), target)
+            painter.end()
+            method += "; WA_UnderMouse simulated fallback accepted; composed accepted widget.grab() into host frame"
+        else:
+            method += "; WA_UnderMouse simulated fallback ineffective"
+    snapshots[state] = full
+    return target, rendered, method
 
 
 def make_sheet(images, candidate, out):
@@ -462,22 +499,9 @@ def run(config, config_hash, out, scale_tag):
                 snapshots = {}
                 for state in STATES:
                     full, target, widget, method, semantic, focus = capture_state(host, w, state)
-                    snapshots[state] = full
-                    rendered = compare_targets(state, target, baseline, widget)
-                    if state == "hover" and rendered is False:
-                        # Reuse the upstream probe's explicitly simulated hover
-                        # fallback before concluding a native state did not paint.
-                        widget.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, True)
-                        QCoreApplication.processEvents()
-                        QTest.qWait(45)
-                        alternative = widget.grab()
-                        if compare_targets(state, alternative, baseline, widget):
-                            rendered = True
-                            target = alternative
-                            full = host.grab()
-                            method += "; WA_UnderMouse simulated fallback changed pixels"
-                        else:
-                            method += "; WA_UnderMouse simulated fallback ineffective"
+                    target, rendered, method = record_state_frame(
+                        host, widget, state, full, target, baseline, method, snapshots
+                    )
                     if state == "combo_popup":
                         # A popup is a separate Qt window; host.grab() omits it.
                         popup_path = out / f"contact_sheet_{candidate}_popup.png"
@@ -492,8 +516,7 @@ def run(config, config_hash, out, scale_tag):
                     scope_ok = all(not w[name].styleSheet()
                                    for name in ("button", "approval", "combo", "amount"))
                     semantic = semantic and scope_ok
-                    assessment = "PASS" if semantic and rendered is not False else (
-                        "INCONCLUSIVE" if semantic else "FAIL")
+                    assessment = assessed_result(semantic, rendered)
                     records.append(dict(
                         candidate=candidate, style_requested=requested,
                         style_effective=actual_style, variant=variant["id"], state=state,
