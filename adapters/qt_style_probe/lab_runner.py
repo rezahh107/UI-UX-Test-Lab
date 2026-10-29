@@ -241,9 +241,11 @@ def capture_state(host, controls, state):
         method = "setEnabled(False), isEnabled(), widget.grab()"
     elif state == "invalid":
         error.show()
+        QCoreApplication.processEvents()
         target = error
-        semantic = error.isVisible()
-        method = "invalid-feedback visible; widget.grab()"
+        actual = error.mapTo(host, QPoint(0, 0))
+        semantic = error.isVisible() and host.rect().contains(QRect(actual, error.size()))
+        method = "invalid-feedback visible and within host; widget.grab()"
     elif state == "combo_selected":
         combo.setFocus()
         QTest.keyClick(combo, Qt.Key.Key_Down)
@@ -429,10 +431,15 @@ def run(config, config_hash, out, scale_tag):
                 for name in ("button", "approval", "combo", "amount", "error",
                              "disabled_button", "disabled_input"):
                     control = w[name]
+                    if not control.isVisible():
+                        # A hidden control does not have reliable visible geometry.
+                        # The invalid state separately verifies error placement.
+                        bounded[name] = None
+                        continue
                     top_left = control.mapTo(host, QPoint(0, 0))
                     bounds = QRect(top_left, control.size())
                     bounded[name] = host.rect().contains(bounds)
-                all_controls_inside = all(bounded.values())
+                all_controls_inside = all(value is not False for value in bounded.values())
                 env["variants"][candidate] = {
                     "execution": "EXECUTED", "style_requested": requested,
                     "style_effective": actual_style,
