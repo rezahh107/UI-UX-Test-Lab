@@ -1,0 +1,324 @@
+{
+  "timestamp_utc": "2026-10-29T11:45:40.656633+00:00",
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "os_release": "2025Server",
+  "os_version": "10.0.26100",
+  "windows_build": 26100,
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "qt": "6.11.2",
+  "pyside6": "6.11.2",
+  "qpa_effective": "windows",
+  "qpa_requested": "windows",
+  "available_styles": [
+    "windows11",
+    "windowsvista",
+    "Windows",
+    "Fusion"
+  ],
+  "requested_font": "Tahoma",
+  "resolved_font": "Tahoma",
+  "font_points": 11,
+  "screen_geometry_logical": [
+    0,
+    0,
+    819,
+    614
+  ],
+  "screen_dpr": 1.25,
+  "window_logical_size": [
+    640,
+    450
+  ],
+  "qt_scale_factor": "1.25",
+  "scale_tag": "synthetic-125",
+  "display_scale_class": "synthetic_QT_SCALE_FACTOR",
+  "actual_windows_display_scale": null,
+  "color_scheme_reported": "ColorScheme.Light",
+  "system_theme_verified": false,
+  "capture_method": "QWidget.grab() and QComboBox.view().grab(); no desktop capture",
+  "run_id": "40867726507",
+  "source_sha": "e37537f085bffb98bfac22bd671ed8c0b17ff339",
+  "source_probe": {
+    "repository": "rezahh107/Bank2Odoo",
+    "branch": "diag/qt-style-probe",
+    "commit": "1bfc65b4bfdbac60efabf6957e2a5d558ef9c86b",
+    "path": "tools/qt_style_probe/probe.py"
+  },
+  "target_config_sha256": "507e0a75505b978e1315fdb3e02e405364bedf5102e41d1ba20c74a4d81b69bb",
+  "variants": {
+    "windows11_baseline": {
+      "execution": "EXECUTED",
+      "style_requested": "windows11",
+      "style_effective": "windows11",
+      "palette_roles": {
+        "Window": "#d4d0c8",
+        "Base": "#ffffff",
+        "Text": "#000000",
+        "Button": "#d4d0c8",
+        "ButtonText": "#000000"
+      },
+      "scoped_card_qss": false,
+      "native_control_qss_empty": true,
+      "font_resolved": "Tahoma",
+      "calculated_windowtext_card_contrast": 13.656,
+      "host_exceeds_screen_logical": false,
+      "controls_inside_host": {
+        "button": true,
+        "approval": true,
+        "combo": true,
+        "amount": true,
+        "error": null,
+        "disabled_button": true,
+        "disabled_input": true
+      },
+      "all_controls_inside_host": true,
+      "host_actual_logical": [
+        640,
+        450
+      ],
+      "note": "role-pair contrast not rendered glyph pixel contrast"
+    },
+    "windows11_palette": {
+      "execution": "EXECUTED",
+      "style_requested": "windows11",
+      "style_effective": "windows11",
+      "palette_roles": {
+        "Window": "#151a21",
+        "Base": "#202831",
+        "Text": "#eaf1f7",
+        "Button": "#303e50",
+        "ButtonText": "#eaf1f7"
+      },
+      "scoped_card_qss": false,
+      "native_control_qss_empty": true,
+      "font_resolved": "Tahoma",
+      "calculated_windowtext_card_contrast": 15.333,
+      "host_exceeds_screen_logical": false,
+      "controls_inside_host": {
+        "button": true,
+        "approval": true,
+        "combo": true,
+        "amount": true,
+        "error": null,
+        "disabled_button": true,
+        "disabled_input": true
+      },
+      "all_controls_inside_host": true,
+      "host_actual_logical": [
+        640,
+        450
+      ],
+      "note": "role-pair contrast not rendered glyph pixel contrast"
+    },
+    "windows11_card_qss": {
+      "execution": "EXECUTED",
+      "style_requested": "windows11",
+      "style_effective": "windows11",
+      "palette_roles": {
+        "Window": "#d4d0c8",
+        "Base": "#ffffff",
+        "Text": "#000000",
+        "Button": "#d4d0c8",
+        "ButtonText": "#000000"
+      },
+      "scoped_card_qss": true,
+      "native_control_qss_empty": true,
+      "font_resolved": "Tahoma",
+      "calculated_windowtext_card_contrast": 1.409,
+      "host_exceeds_screen_logical": false,
+      "controls_inside_host": {
+        "button": true,
+        "approval": true,
+        "combo": true,
+        "amount": true,
+        "error": null,
+        "disabled_button": true,
+        "disabled_input": true
+      },
+      "all_controls_inside_host": true,
+      "host_actual_logical": [
+        640,
+        450
+      ],
+      "note": "role-pair contrast not rendered glyph pixel contrast"
+    },
+    "windows11_palette_card_qss": {
+      "execution": "EXECUTED",
+      "style_requested": "windows11",
+      "style_effective": "windows11",
+      "palette_roles": {
+        "Window": "#151a21",
+        "Base": "#202831",
+        "Text": "#eaf1f7",
+        "Button": "#303e50",
+        "ButtonText": "#eaf1f7"
+      },
+      "scoped_card_qss": true,
+      "native_control_qss_empty": true,
+      "font_resolved": "Tahoma",
+      "calculated_windowtext_card_contrast": 13.073,
+      "host_exceeds_screen_logical": false,
+      "controls_inside_host": {
+        "button": true,
+        "approval": true,
+        "combo": true,
+        "amount": true,
+        "error": null,
+        "disabled_button": true,
+        "disabled_input": true
+      },
+      "all_controls_inside_host": true,
+      "host_actual_logical": [
+        640,
+        450
+      ],
+      "note": "role-pair contrast not rendered glyph pixel contrast"
+    },
+    "fusion_baseline": {
+      "execution": "EXECUTED",
+      "style_requested": "Fusion",
+      "style_effective": "fusion",
+      "palette_roles": {
+        "Window": "#efefef",
+        "Base": "#ffffff",
+        "Text": "#000000",
+        "Button": "#efefef",
+        "ButtonText": "#000000"
+      },
+      "scoped_card_qss": false,
+      "native_control_qss_empty": true,
+      "font_resolved": "Tahoma",
+      "calculated_windowtext_card_contrast": 18.263,
+      "host_exceeds_screen_logical": false,
+      "controls_inside_host": {
+        "button": true,
+        "approval": true,
+        "combo": true,
+        "amount": true,
+        "error": null,
+        "disabled_button": true,
+        "disabled_input": true
+      },
+      "all_controls_inside_host": true,
+      "host_actual_logical": [
+        640,
+        450
+      ],
+      "note": "role-pair contrast not rendered glyph pixel contrast"
+    },
+    "fusion_palette": {
+      "execution": "EXECUTED",
+      "style_requested": "Fusion",
+      "style_effective": "fusion",
+      "palette_roles": {
+        "Window": "#151a21",
+        "Base": "#202831",
+        "Text": "#eaf1f7",
+        "Button": "#303e50",
+        "ButtonText": "#eaf1f7"
+      },
+      "scoped_card_qss": false,
+      "native_control_qss_empty": true,
+      "font_resolved": "Tahoma",
+      "calculated_windowtext_card_contrast": 15.333,
+      "host_exceeds_screen_logical": false,
+      "controls_inside_host": {
+        "button": true,
+        "approval": true,
+        "combo": true,
+        "amount": true,
+        "error": null,
+        "disabled_button": true,
+        "disabled_input": true
+      },
+      "all_controls_inside_host": true,
+      "host_actual_logical": [
+        640,
+        450
+      ],
+      "note": "role-pair contrast not rendered glyph pixel contrast"
+    },
+    "fusion_card_qss": {
+      "execution": "EXECUTED",
+      "style_requested": "Fusion",
+      "style_effective": "fusion",
+      "palette_roles": {
+        "Window": "#efefef",
+        "Base": "#ffffff",
+        "Text": "#000000",
+        "Button": "#efefef",
+        "ButtonText": "#000000"
+      },
+      "scoped_card_qss": true,
+      "native_control_qss_empty": true,
+      "font_resolved": "Tahoma",
+      "calculated_windowtext_card_contrast": 1.409,
+      "host_exceeds_screen_logical": false,
+      "controls_inside_host": {
+        "button": true,
+        "approval": true,
+        "combo": true,
+        "amount": true,
+        "error": null,
+        "disabled_button": true,
+        "disabled_input": true
+      },
+      "all_controls_inside_host": true,
+      "host_actual_logical": [
+        640,
+        450
+      ],
+      "note": "role-pair contrast not rendered glyph pixel contrast"
+    },
+    "fusion_palette_card_qss": {
+      "execution": "EXECUTED",
+      "style_requested": "Fusion",
+      "style_effective": "fusion",
+      "palette_roles": {
+        "Window": "#151a21",
+        "Base": "#202831",
+        "Text": "#eaf1f7",
+        "Button": "#303e50",
+        "ButtonText": "#eaf1f7"
+      },
+      "scoped_card_qss": true,
+      "native_control_qss_empty": true,
+      "font_resolved": "Tahoma",
+      "calculated_windowtext_card_contrast": 13.073,
+      "host_exceeds_screen_logical": false,
+      "controls_inside_host": {
+        "button": true,
+        "approval": true,
+        "combo": true,
+        "amount": true,
+        "error": null,
+        "disabled_button": true,
+        "disabled_input": true
+      },
+      "all_controls_inside_host": true,
+      "host_actual_logical": [
+        640,
+        450
+      ],
+      "note": "role-pair contrast not rendered glyph pixel contrast"
+    }
+  },
+  "negative_controls": {
+    "low_contrast": {
+      "injected": "known low contrast QLabel",
+      "foreground": "#555555",
+      "background": "#565656",
+      "palette_contrast": 1.016,
+      "capture_non_null": true,
+      "detected": true,
+      "limit": "Explicit palette-pair contrast, not actual glyph-pixel analysis"
+    },
+    "matrix": true
+  },
+  "limits": [
+    "Not accountant Windows 11 desktop",
+    "Qt synthetic scale is not Windows display scaling",
+    "Keyboard/pointer events are QTest simulated, not physical input",
+    "QPalette role contrast is not rendered-glyph contrast"
+  ]
+}
