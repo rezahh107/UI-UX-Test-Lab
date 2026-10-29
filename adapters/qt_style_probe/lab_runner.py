@@ -94,6 +94,7 @@ def build_host(cfg, variant):
     labels = cfg["fields"]
     host = QWidget()
     host.setObjectName("labHost")
+    host.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
     host.setWindowTitle("Qt Native Style Diagnostic — Synthetic")
     host.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
     host.resize(cfg["window_width"], cfg["window_height"])
@@ -202,11 +203,13 @@ def capture_state(host, controls, state):
     target = button
 
     if state == "focus":
-        button.setFocus(Qt.FocusReason.TabFocusReason)
+        # Synthetic keyboard traversal, not a direct assignment of focus.
+        approval.setFocus(Qt.FocusReason.TabFocusReason)
+        QTest.keyClick(approval, Qt.Key.Key_Tab)
         QCoreApplication.processEvents()
         focus_actual = button.hasFocus()
         semantic = focus_actual
-        method = "setFocus(TabFocusReason), hasFocus(), widget.grab()"
+        method = "QTest.keyClick(Tab from approval), hasFocus(), widget.grab()"
     elif state == "hover":
         QTest.mouseMove(button, button.rect().center())
         method = "QTest.mouseMove simulated; widget.grab()"
@@ -422,6 +425,14 @@ def run(config, config_hash, out, scale_tag):
                     (label_foreground.red(), label_foreground.green(), label_foreground.blue()))
                 exceeds_screen = (host.width() > screen.availableGeometry().width() or
                                   host.height() > screen.availableGeometry().height())
+                bounded = {}
+                for name in ("button", "approval", "combo", "amount", "error",
+                             "disabled_button", "disabled_input"):
+                    control = w[name]
+                    top_left = control.mapTo(host, QPoint(0, 0))
+                    bounds = QRect(top_left, control.size())
+                    bounded[name] = host.rect().contains(bounds)
+                all_controls_inside = all(bounded.values())
                 env["variants"][candidate] = {
                     "execution": "EXECUTED", "style_requested": requested,
                     "style_effective": actual_style,
@@ -433,6 +444,9 @@ def run(config, config_hash, out, scale_tag):
                     "font_resolved": QFontInfo(host.font()).family(),
                     "calculated_windowtext_card_contrast": card_contrast,
                     "host_exceeds_screen_logical": exceeds_screen,
+                    "controls_inside_host": bounded,
+                    "all_controls_inside_host": all_controls_inside,
+                    "host_actual_logical": [host.width(), host.height()],
                     "note": "role-pair contrast not rendered glyph pixel contrast",
                 }
                 baseline = {key: widget.grab() for key, widget in (
@@ -509,6 +523,7 @@ def run(config, config_hash, out, scale_tag):
         "Low-contrast negative control: " + ("DETECTED" if env["negative_controls"]["low_contrast"]["detected"] else "MISSED"),
         "Candidate low role contrast (<4.5): " + ", ".join(k for k,v in env["variants"].items() if v.get("calculated_windowtext_card_contrast", 99) < 4.5),
         "Window larger than logical screen: " + ", ".join(k for k,v in env["variants"].items() if v.get("host_exceeds_screen_logical")),
+        "Widgets outside host bounds: " + ", ".join(k for k,v in env["variants"].items() if v.get("all_controls_inside_host") is False),
         "", "## Missing visual changes", "",
     ] + [f"- {r['candidate']} / {r['state']}" for r in not_rendered] + [
         "", "## Limitations",
