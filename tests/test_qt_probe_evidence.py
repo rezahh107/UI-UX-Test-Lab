@@ -6,7 +6,7 @@ Foundation-only Linux CI retains its standard-library environment and skips Qt.
 from __future__ import annotations
 
 import hashlib
-import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -28,8 +28,18 @@ except ImportError:
 
 class SourceIntegrityTests(unittest.TestCase):
     def test_migrated_upstream_probe_blob_unchanged(self):
-        raw = UPSTREAM.read_bytes()
-        git_blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+        # Git's committed blob is authoritative; Windows checkout may convert
+        # LF into CRLF even when the source Git object is byte-for-byte intact.
+        blob = subprocess.run(
+            ["git", "-C", str(ROOT), "show",
+             "HEAD:adapters/qt_style_probe/source_probe.py"],
+            capture_output=True, check=True,
+        ).stdout
+        working = UPSTREAM.read_bytes().replace(b"\r\n", b"\n")
+        self.assertEqual(working, blob, "Working tree differs beyond EOL normalization")
+        git_blob = hashlib.sha1(
+            b"blob " + str(len(blob)).encode() + b"\0" + blob
+        ).hexdigest()
         self.assertEqual(git_blob, "7b554e784774f2eac02140de17d08f4f3cf46ab8")
 
 
@@ -124,7 +134,7 @@ class QtEvidenceIntegrityTests(unittest.TestCase):
         return shots, target, rendered, method, widget
 
     def assert_hover_sheet_color(self, shots, expected):
-        # The hover tile is column 1 / row 0. Sample its actual saved PNG,
+        # Derive hover's tile position from STATES; never assume column/row.
         # not merely the in-memory target or a metadata label.
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "contact_sheet_test.png"
@@ -133,8 +143,9 @@ class QtEvidenceIntegrityTests(unittest.TestCase):
             self.assertFalse(image.isNull())
             # Full frame 120x90 scales to 424x282; the accepted widget
             # spans logical [18,58)x[12,52). Sample its interior at (30,30).
-            x = 440 + 8 + round(424 * 30 / 120)
-            y = 48 + 26 + round(282 * 30 / 90)
+            hover_index = probe.STATES.index("hover")
+            x = (hover_index % 2) * 440 + 8 + round(424 * 30 / 120)
+            y = 48 + (hover_index // 2) * 315 + 26 + round(282 * 30 / 90)
             self.assertEqual(image.pixelColor(x, y).name(), expected)
 
     def test_hover_accepted_fallback_is_the_saved_contact_sheet_frame(self):
