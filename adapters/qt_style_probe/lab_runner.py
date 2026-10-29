@@ -464,6 +464,20 @@ def run(config, config_hash, out, scale_tag):
                     full, target, widget, method, semantic, focus = capture_state(host, w, state)
                     snapshots[state] = full
                     rendered = compare_targets(state, target, baseline, widget)
+                    if state == "hover" and rendered is False:
+                        # Reuse the upstream probe's explicitly simulated hover
+                        # fallback before concluding a native state did not paint.
+                        widget.setAttribute(Qt.WidgetAttribute.WA_UnderMouse, True)
+                        QCoreApplication.processEvents()
+                        QTest.qWait(45)
+                        alternative = widget.grab()
+                        if compare_targets(state, alternative, baseline, widget):
+                            rendered = True
+                            target = alternative
+                            full = host.grab()
+                            method += "; WA_UnderMouse simulated fallback changed pixels"
+                        else:
+                            method += "; WA_UnderMouse simulated fallback ineffective"
                     if state == "combo_popup":
                         # A popup is a separate Qt window; host.grab() omits it.
                         popup_path = out / f"contact_sheet_{candidate}_popup.png"
