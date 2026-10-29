@@ -1,0 +1,90 @@
+name: Qt Native Styling Lab (diagnostic only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/qt-style-probe-windows-ci]
+
+permissions:
+  contents: write # only remote push is to lab-evidence
+
+concurrency:
+  group: qt-style-probe-lab-evidence
+  cancel-in-progress: false
+
+jobs:
+  qt-native-probe:
+    runs-on: windows-2025
+    timeout-minutes: 25
+    env:
+      QT_QPA_PLATFORM: windows
+    steps:
+      - name: Checkout exact triggering feature commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: true
+      - name: Show source and runtime
+        shell: pwsh
+        run: |
+          git rev-parse HEAD
+          python --version
+          git --version
+      - name: Install pinned Qt test runtime (no product install)
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check "PySide6==6.11.2"
+          if ($LASTEXITCODE -ne 0) { throw "PySide6 dependency installation failed" }
+      - name: Preserve foundation verification and unit tests
+        shell: pwsh
+        run: |
+          python scripts/verify_foundation.py
+          if ($LASTEXITCODE -ne 0) { throw "Foundation contract failed" }
+          python -m unittest discover -s tests -p 'test_*.py' -v
+          if ($LASTEXITCODE -ne 0) { throw "Unit tests failed" }
+      - name: Native and synthetic Qt capture runs
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          foreach ($scale in @("runner-native", "synthetic-125", "synthetic-150")) {
+            if ($scale -eq "runner-native") {
+              Remove-Item Env:QT_SCALE_FACTOR -ErrorAction SilentlyContinue
+            } elseif ($scale -eq "synthetic-125") {
+              $env:QT_SCALE_FACTOR = "1.25"
+            } else {
+              $env:QT_SCALE_FACTOR = "1.5"
+            }
+            python -m adapters.qt_style_probe.lab_runner --output "artifacts/qt-style-probe/$scale" --scale-tag $scale
+            if ($LASTEXITCODE -ne 0) { throw "Probe failed on $scale" }
+          }
+          Remove-Item Env:QT_SCALE_FACTOR -ErrorAction SilentlyContinue
+      - name: Commit ONLY compact results to lab-evidence
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $scratch = Join-Path $env:RUNNER_TEMP "qt-probe-curated-$env:GITHUB_RUN_ID"
+          New-Item -ItemType Directory -Path $scratch -Force | Out-Null
+          Copy-Item -Path "artifacts/qt-style-probe/*" -Destination $scratch -Recurse
+          git fetch origin lab-evidence
+          if ($LASTEXITCODE -ne 0) { throw "Unable to fetch evidence branch" }
+          git checkout -B lab-evidence origin/lab-evidence
+          if ($LASTEXITCODE -ne 0) { throw "Unable to checkout evidence branch" }
+          $dest = "evidence/qt-style-probe/$env:GITHUB_RUN_ID"
+          New-Item -ItemType Directory -Path $dest -Force | Out-Null
+          Copy-Item -Path "$scratch/*" -Destination $dest -Recurse
+          @(
+            "# Qt Style Probe — Run $env:GITHUB_RUN_ID",
+            "",
+            "- Feature commit: $env:GITHUB_SHA",
+            "- Runner: windows-2025; widget.grab(), NOT accountant desktop capture.",
+            "- runner-native: hosted-runner scale, actual OS display scaling not independently verified.",
+            "- synthetic-125: QT_SCALE_FACTOR=1.25, not real 125% display scaling.",
+            "- synthetic-150: QT_SCALE_FACTOR=1.5, not real 150% display scaling.",
+            "- Each scale subfolder contains contact sheets, measurements.csv, environment.json and summary.md.",
+            "- No production, accountant or physical desktop approval."
+          ) | Set-Content -Path "$dest/summary.md" -Encoding utf8
+          git add -- $dest
+          git -c user.name="qt-lab-evidence" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "evidence(qt): Windows native probe run $env:GITHUB_RUN_ID"
+          if ($LASTEXITCODE -ne 0) { throw "Evidence commit failed" }
+          git push origin HEAD:refs/heads/lab-evidence
+          if ($LASTEXITCODE -ne 0) { throw "Evidence push failed" }

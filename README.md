@@ -1,6 +1,6 @@
 # UI-UX-Test-Lab
 
-**Status: foundation only.** No GUI, browser, WordPress, rendering, screenshot, or visual-measurement runner is implemented.
+**Status: foundation verifier plus one narrowly authorized Windows Qt diagnostic adapter.** No general-purpose GUI, browser, WordPress or production test platform is implemented.
 
 This repository will hold **reusable execution and measurement tools** for a separate specialist ChatGPT UI/UX Project. It is intended to produce reproducible evidence, not UI/UX design judgments.
 
@@ -30,4 +30,4 @@ On Windows, `py -3 scripts/verify_foundation.py` is an equivalent invocation if 
 - [Foundation CI](.github/workflows/foundation.yml): repeats the verifier on changes; does not run third-party projects.
 - `.gitattributes`, `.editorconfig`, `.gitignore`: version-control, editor, and local-artifact hygiene.
 
-No application dependencies, build stages, test fixtures, release procedure, or platform-specific test environments exist yet. Add them only alongside an approved, working capability and its actual verification path.
+One focused Windows adapter is available: [Qt native styling probe](adapters/qt_style_probe/README.md). It uses only synthetic data and depends on PySide6 when run. Other platform-specific environments remain absent.

@@ -1,0 +1,80 @@
+{
+  "schema": "qt-style-probe.lab.v1",
+  "source": {
+    "repository": "rezahh107/Bank2Odoo",
+    "branch": "diag/qt-style-probe",
+    "commit": "1bfc65b4bfdbac60efabf6957e2a5d558ef9c86b",
+    "path": "tools/qt_style_probe/probe.py"
+  },
+  "requested_styles": [
+    "windows11",
+    "Fusion"
+  ],
+  "variants": [
+    {
+      "id": "baseline",
+      "palette": false,
+      "scoped_qss": false,
+      "description": "Native style, native/system palette, no QSS"
+    },
+    {
+      "id": "palette",
+      "palette": true,
+      "scoped_qss": false,
+      "description": "Native controls plus application dark QPalette only"
+    },
+    {
+      "id": "card_qss",
+      "palette": false,
+      "scoped_qss": true,
+      "description": "Native palette plus card-only QSS"
+    },
+    {
+      "id": "palette_card_qss",
+      "palette": true,
+      "scoped_qss": true,
+      "description": "Application dark QPalette plus card-only QSS"
+    }
+  ],
+  "requested_font_families": [
+    "Vazirmatn",
+    "Tahoma",
+    "Segoe UI"
+  ],
+  "font_point_size": 11,
+  "window_width": 860,
+  "window_height": 540,
+  "fields": {
+    "title": "آزمایش ظاهر فرم حسابداری",
+    "bank": "بانک آزمایشی",
+    "journal": "دفتر نمونه ۱۲۳",
+    "amount": "IRR 12,345,678.00",
+    "approval": "اطلاعات نمونه را بررسی و تأیید می‌کنم",
+    "convert": "اعتبارسنجی آزمایشی",
+    "secondary": "بازگشت",
+    "status": "آماده آزمایش",
+    "error": "خطا: مقدار آزمایشی معتبر نیست"
+  },
+  "dark_palette": {
+    "window": "#151A21",
+    "surface": "#202831",
+    "text": "#EAF1F7",
+    "button": "#303E50",
+    "button_text": "#EAF1F7",
+    "highlight": "#418BB3",
+    "highlight_text": "#FFFFFF",
+    "disabled_bg": "#252E37",
+    "disabled_text": "#A7B4BD",
+    "border": "#596C7A",
+    "error": "#FFA99C"
+  },
+  "card_qss": {
+    "background": "#202831",
+    "border": "#596C7A"
+  },
+  "negative_control": {
+    "foreground": "#555555",
+    "background": "#565656",
+    "max_contrast": 4.5
+  }
+}
