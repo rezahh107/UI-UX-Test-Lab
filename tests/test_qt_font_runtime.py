@@ -26,7 +26,7 @@ except ImportError:
 
 class FontAssets(unittest.TestCase):
     def test_original_pinned_ttf_hashes_and_license(self):
-        self.assertEqual(sorted(p.name for p in FONTS.iterdir()), sorted(["OFL.txt", *HASHES]))
+        self.assertEqual(sorted(p.name for p in FONTS.iterdir()), sorted(["OFL.txt", "README.md", *HASHES]))
         for file, expected in HASHES.items():
             with self.subTest(file=file):
                 self.assertEqual(hashlib.sha256((FONTS / file).read_bytes()).hexdigest(), expected)
