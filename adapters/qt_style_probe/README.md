@@ -86,8 +86,17 @@ Each of the 2 × 2 × 3 combinations tests normal, focus via keyboard Tab,
 hover, pressed, and disabled states (60 rows per scale). Button geometry is
 fixed to the pre-emphasis native widget, and the unchanged text, base
 font family/point size and keyboard Space activation are checked. The
-comparison logs whether normal button pixels actually differ from native;
-\`QPalette\` emphasis must **not** be assumed to paint on every style.
+comparison compares normal-state pixels against native button painting captured
+with matching focus/pointer/reset conditions. Disabled-state painting must
+differ from both matched native-disabled and emphasized-enabled captures.
+Missing or unchanged required visual evidence is INCONCLUSIVE, not PASS;
+semantic or calculated contrast violations remain FAIL. The existing CSV
+columns are retained; environment.json additionally records both disabled
+reference comparisons per candidate. QPalette emphasis is not guaranteed
+to change native Qt painting.
+
+Each run writes a new run-ID evidence folder. Historical evidence retains
+the original evaluator's meaning and is not reclassified by this repair.
 
 Every row has independent EXECUTED/NOT_EXECUTED, MEASURED/NOT_MEASURED,
 semantic status, and contrast metadata. Color contrast >= 4.5:1 is
