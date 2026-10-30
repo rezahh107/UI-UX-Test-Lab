@@ -180,3 +180,44 @@ physical keyboard/mouse, real device font fallback, final Persian readability,
 assistive tech or glyph-pixel contrast. A specialist must inspect the full
 PNG indicator (including unchecked), glyph joining and focus before deciding
 whether the local checkbox treatment is acceptable.
+
+
+## Product-equivalent 22px approval-control qualification (read-only source)
+
+\`approval_equivalence.py\` is a separate bounded Lab diagnostic that uses the
+public, fixed approval UI sentence and reconstructs only the following source
+contracts from Bank2Odoo commit
+\`d06b35f41ac46936716b186fb1dfac33da983eb9\`:
+\`_ApprovalIndicatorStyle.pixelMetric\` returns \`max(native,22)\` for indicator
+width and height; \`_FullRowCheckBox.hitButton\` accepts any point inside the
+row; the checkbox uses minimum height 52, \`StrongFocus\`, and RTL. Its native
+vs scoped \`QCheckBox#nativeApproval::indicator:unchecked\` QSS comparison
+reuses the existing Lab form and dark QPalette and does NOT import or run the
+product (the full product panel, custom QGroupBox surfaces and data logic are
+not reproduced). The original files remain unchanged.
+
+The test measures the original proxy \`pixelMetric\`, the **effective** Qt
+\`checkbox.style().pixelMetric\` and \`SE_CheckBoxIndicator\` rectangle.
+The border candidate is a FAIL if it collapses the 22px indicator geometry,
+even if it makes unchecked pixels brighter. Synthetic keyboard Space, Tab focus,
+full-row click and checked/unchecked distinction are independently checked.
+The measured indicator pixels are compared with a nearby rendered surface;
+role-pair contrast is recorded separately, not treated as glyph-pixel contrast.
+Unexpected or missing visual evidence is NOT_PROVEN, never a product PASS.
+
+The existing Windows workflow runs this alongside \`lab_runner\`,
+\`primary_action\`, and \`whole_form\` and saves *original-resolution* PNGs,
+small previews, measurements.csv, environment.json and summary.md in
+\`evidence/qt-style-probe/<run-id>/<scale>/approval-equivalence/\` on
+\`lab-evidence\`. Tahoma/Vazirmatn execute only when installed; missing
+fonts or QStyles are explicitly NOT_EXECUTED. Physical Windows 11 and genuine
+OS Display scales 100/125/150 are **always NOT_EXECUTED** in the hosted
+Windows-2025 CI and cannot be inferred from \`QT_SCALE_FACTOR\`.
+
+Invoke independently from a PySide6-Essentials==6.11.2 Lab checkout:
+
+    python -m adapters.qt_style_probe.approval_equivalence --output "artifacts/qt-style-probe/manual/approval-equivalence" --scale-tag manual-synthetic
+
+Product adoption is NOT qualified by this proxy-equivalence test alone:
+a user-supervised real Windows11 visual and accessibility check under actual
+display scaling is still mandatory.
