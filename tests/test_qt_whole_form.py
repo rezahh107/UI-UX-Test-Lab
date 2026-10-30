@@ -100,6 +100,13 @@ class WholeFormQtRegressions(unittest.TestCase):
             )
             self.assertTrue(controls["joining"]["expected_distinguished"])
             self.assertTrue(controls["joining"]["zwnj_inserted_in_word"])
+            # Deliberately broken Seen–Yeh joining must be visible to at
+            # least one native Qt text renderer, not just string inequality.
+            self.assertTrue(
+                controls["joining"]["label_visual_changed"] or
+                controls["joining"]["checkbox_visual_changed"],
+                "Malformed ZWNJ was not visually distinguished by Qt"
+            )
             self.assertEqual(
                 controls["fixture_info"]["valid"]["text"], whole.PRODUCT_TEXT
             )
@@ -135,6 +142,8 @@ class WholeFormQtRegressions(unittest.TestCase):
             self.assertTrue(all(r["execution"]=="EXECUTED" for r in actual))
             self.assertTrue(all((out/r["filename"]).is_file() for r in actual))
             self.assertEqual(len(list(out.glob("contact_sheet_*.png"))), 3)
+            self.assertEqual(len(list(out.glob("*_indicator_unchecked.png"))), 3)
+            self.assertEqual(len(list(out.glob("*_indicator_checked.png"))), 3)
             meta = json.loads((out/"environment.json").read_text(encoding="utf-8"))
             self.assertEqual(meta["installed_tested_fonts"], ["Tahoma"])
             self.assertTrue(meta["negative_controls"]["indicator_detected_as_inadequate"])
