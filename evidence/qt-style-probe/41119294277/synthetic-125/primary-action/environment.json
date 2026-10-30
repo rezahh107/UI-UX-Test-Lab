@@ -1,0 +1,359 @@
+{
+  "source_sha": "bcf43f22b1a0bc2dae74eac5f58c25fb56ab01a6",
+  "run_id": "41119294277",
+  "timestamp_utc": "2026-10-30T19:59:33.635587+00:00",
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "windows_build": 26100,
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "qt": "6.11.2",
+  "pyside6_essentials_target": "6.11.2",
+  "pyside6_runtime": "6.11.2",
+  "qpa": "windows",
+  "qt_scale_factor": "1.25",
+  "scale_tag": "synthetic-125",
+  "actual_windows_display_scale": null,
+  "real_device_accepted": false,
+  "requested_styles": [
+    "windows11",
+    "Fusion"
+  ],
+  "available_styles": [
+    "windows11",
+    "windowsvista",
+    "Windows",
+    "Fusion"
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "methods": [
+    "font_weight",
+    "palette",
+    "button_qss"
+  ],
+  "states": [
+    "normal",
+    "focus",
+    "hover",
+    "pressed",
+    "disabled"
+  ],
+  "font_family": "Tahoma",
+  "font_point_size": 11,
+  "synthetic_tokens": {
+    "light": {
+      "background": "#164B85",
+      "foreground": "#FFFFFF",
+      "hover": "#1D5D99",
+      "pressed": "#123B67",
+      "disabled_background": "#F1F3F6",
+      "disabled_foreground": "#5E6877",
+      "focus_border": "#C17D10"
+    },
+    "dark": {
+      "background": "#86C7F0",
+      "foreground": "#112638",
+      "hover": "#A3D6FA",
+      "pressed": "#6CAAD6",
+      "disabled_background": "#303B47",
+      "disabled_foreground": "#B7C4CE",
+      "focus_border": "#FFE08C"
+    }
+  },
+  "contrast_threshold": 4.5,
+  "contrast_limit": "color-role/token pairs, not actual rendered glyph pixel contrast",
+  "capture_method": "QWidget.grab() with QTest synthetic interactions",
+  "negative_control": {
+    "ratio": 1.016,
+    "threshold": 4.5,
+    "detected": true,
+    "fixture": "synthetic QPushButton-only QSS #555555 on #565656",
+    "limit": "explicit token pair; not rendered glyph measurement"
+  },
+  "baselines": {
+    "windows11_light_font_weight": {
+      "native_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "windows11_light_palette": {
+      "native_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "windows11_light_button_qss": {
+      "native_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "windows11_dark_font_weight": {
+      "native_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "windows11_dark_palette": {
+      "native_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "windows11_dark_button_qss": {
+      "native_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        223,
+        184,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "fusion_light_font_weight": {
+      "native_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "fusion_light_palette": {
+      "native_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "fusion_light_button_qss": {
+      "native_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "fusion_dark_font_weight": {
+      "native_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "fusion_dark_palette": {
+      "native_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    },
+    "fusion_dark_button_qss": {
+      "native_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "native_font": "Tahoma",
+      "method_geometry": [
+        412,
+        218,
+        185,
+        42,
+        640,
+        450
+      ],
+      "normal_emphasis_changed": true,
+      "disabled_vs_native_changed": true,
+      "disabled_vs_enabled_changed": true,
+      "keyboard_space_activated": true
+    }
+  },
+  "limits": [
+    "No financial/product data",
+    "Synthetic Windows hosted runner, not a real Windows 11 user desktop",
+    "QT_SCALE_FACTOR is not Windows OS display scaling",
+    "QTest input does not establish physical mouse or keyboard behavior",
+    "No actual text glyph pixel contrast, human readability or visual acceptance"
+  ]
+}
