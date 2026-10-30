@@ -1,9 +1,14 @@
 """Synthetic primary-action comparison contract and real Qt widget regressions."""
+import csv
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 try:
     from PySide6.QtCore import Qt, QPoint
+    from PySide6.QtGui import QColor, QPixmap
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QStyleFactory
     from adapters.qt_style_probe import lab_runner as lab
@@ -139,6 +144,137 @@ class PrimaryActionTests(unittest.TestCase):
             self.assertTrue(result["detected"])
             self.assertLess(result["ratio"], primary.MIN_CONTRAST)
             self.assertTrue((Path(folder) / "negative_button.png").is_file())
+
+
+    @staticmethod
+    def colored_pixmap(color):
+        image = QPixmap(160, 48)
+        image.fill(QColor(color))
+        return image
+
+    def test_normal_unchanged_image_cannot_pass_even_with_good_semantics(self):
+        native = self.colored_pixmap("#223344")
+        emphasized = native.copy()
+        rendered = primary.visual_evidence(
+            "normal", emphasized, native, None, emphasized, None
+        )
+        self.assertFalse(rendered)
+        self.assertEqual(primary.assess_state(True, True, rendered), "INCONCLUSIVE")
+        self.assertEqual(primary.assess_state(True, True, None), "INCONCLUSIVE")
+
+    def test_normal_measured_emphasis_change_passes(self):
+        native = self.colored_pixmap("#223344")
+        emphasized = self.colored_pixmap("#4a7eb0")
+        rendered = primary.visual_evidence(
+            "normal", emphasized, native, None, emphasized, None
+        )
+        self.assertTrue(rendered)
+        self.assertEqual(primary.assess_state(True, True, rendered), "PASS")
+
+    def test_disabled_matching_native_disabled_cannot_pass(self):
+        native = self.colored_pixmap("#111111")
+        native_disabled = self.colored_pixmap("#aaaaaa")
+        emphasized_normal = self.colored_pixmap("#2288ee")
+        unchanged = native_disabled.copy()
+        rendered = primary.visual_evidence(
+            "disabled", unchanged, native, native_disabled,
+            emphasized_normal, None
+        )
+        self.assertFalse(rendered)
+        self.assertEqual(primary.assess_state(True, True, rendered), "INCONCLUSIVE")
+
+    def test_disabled_matching_enabled_emphasis_cannot_pass(self):
+        native = self.colored_pixmap("#111111")
+        native_disabled = self.colored_pixmap("#aaaaaa")
+        emphasized_normal = self.colored_pixmap("#2288ee")
+        unchanged = emphasized_normal.copy()
+        rendered = primary.visual_evidence(
+            "disabled", unchanged, native, native_disabled,
+            emphasized_normal, None
+        )
+        self.assertFalse(rendered)
+        self.assertEqual(primary.assess_state(True, True, rendered), "INCONCLUSIVE")
+
+    def test_disabled_distinct_from_both_references_passes(self):
+        native = self.colored_pixmap("#111111")
+        native_disabled = self.colored_pixmap("#aaaaaa")
+        emphasized_normal = self.colored_pixmap("#2288ee")
+        disabled = self.colored_pixmap("#596879")
+        rendered = primary.visual_evidence(
+            "disabled", disabled, native, native_disabled,
+            emphasized_normal, None
+        )
+        self.assertTrue(rendered)
+        self.assertEqual(primary.assess_state(True, True, rendered), "PASS")
+
+    def test_existing_interactive_inconclusive_and_failure_precedence(self):
+        for state in ("focus", "hover", "pressed"):
+            with self.subTest(state=state):
+                pixel = self.colored_pixmap("#334455")
+                for observed, expected in ((False, "INCONCLUSIVE"),
+                                           (None, "INCONCLUSIVE"),
+                                           (True, "PASS")):
+                    rendered = primary.visual_evidence(
+                        state, pixel, pixel, pixel, pixel, observed
+                    )
+                    self.assertIs(rendered, observed)
+                    self.assertEqual(primary.assess_state(True, True, rendered),
+                                     expected)
+        self.assertEqual(primary.assess_state(False, True, True), "FAIL")
+        self.assertEqual(primary.assess_state(True, False, True), "FAIL")
+
+    def test_missing_windows11_is_not_executed_and_csv_contract_preserved(self):
+        # Suppress the font-weight treatment, so the actual Qt capture is a
+        # no-op. An end-to-end normal row MUST become inconclusive.
+        original_emphasize = primary.emphasize
+
+        def remove_weight_treatment(button, method, theme):
+            if method != "font_weight":
+                return original_emphasize(button, method, theme)
+
+        with tempfile.TemporaryDirectory() as directory:
+            out = Path(directory)
+            with patch.object(primary.QStyleFactory, "keys",
+                              return_value=["Fusion"]), patch.object(
+                                  primary, "emphasize",
+                                  side_effect=remove_weight_treatment):
+                primary.run(self.cfg, out, "regression-no-windows11")
+            with (out / "measurements.csv").open(
+                    encoding="utf-8", newline="") as file:
+                reader = csv.DictReader(file)
+                self.assertEqual(tuple(reader.fieldnames), primary.FIELDS)
+                rows = list(reader)
+            self.assertEqual(len(rows), 60)
+            unavailable = [r for r in rows if r["style_requested"] == "windows11"]
+            self.assertEqual(len(unavailable), 30)
+            self.assertTrue(all(r["execution"] == "NOT_EXECUTED"
+                                and r["measurement"] == "NOT_MEASURED"
+                                and r["assessment"] == "INCONCLUSIVE"
+                                for r in unavailable))
+            actual = [r for r in rows if r["style_requested"] == "Fusion"]
+            self.assertEqual(len(actual), 30)
+            self.assertTrue(all(r["execution"] == "EXECUTED"
+                                and r["measurement"] == "MEASURED"
+                                for r in actual))
+            no_op_normals = [r for r in actual if r["method"] == "font_weight"
+                             and r["state"] == "normal"]
+            self.assertEqual(len(no_op_normals), 2)
+            self.assertTrue(all(r["rendered"] == "False"
+                                and r["assessment"] == "INCONCLUSIVE"
+                                and r["normal_emphasis_visual_change"] == "False"
+                                for r in no_op_normals))
+            self.assertEqual(len(list(out.glob("contact_sheet_*.png"))), 6)
+            self.assertTrue((out / "negative_button.png").is_file())
+            self.assertTrue((out / "summary.md").is_file())
+            env = json.loads((out / "environment.json").read_text(encoding="utf-8"))
+            self.assertTrue(env["negative_control"]["detected"])
+            self.assertEqual(env["themes"], list(primary.THEMES))
+            self.assertEqual(env["methods"], list(primary.METHODS))
+            self.assertEqual(env["states"], list(primary.STATES))
+            self.assertEqual(len(env["baselines"]), 6)
+            for baseline in env["baselines"].values():
+                self.assertIn("disabled_vs_native_changed", baseline)
+                self.assertIn("disabled_vs_enabled_changed", baseline)
 
 
 if __name__ == "__main__":
