@@ -19,6 +19,7 @@ except ImportError:
     QT = False
 
 
+@unittest.skipUnless(QT, "Static UI copy checked on PySide6 Windows CI")
 class StaticSourceContracts(unittest.TestCase):
     def test_product_label_is_static_ui_copy_and_synthetic_is_distinct(self):
         self.assertEqual(
