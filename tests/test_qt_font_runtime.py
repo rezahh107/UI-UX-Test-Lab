@@ -33,7 +33,7 @@ class FontAssets(unittest.TestCase):
         self.assertIn("SIL OPEN FONT LICENSE Version 1.1", (FONTS / "OFL.txt").read_text())
 
     def test_one_canonical_default(self):
-        config = json.loads((ROOT / "adapters/qt_style_probe/target.json").read_text())
+        config = json.loads((ROOT / "adapters/qt_style_probe/target.json").read_text(encoding="utf-8"))
         self.assertEqual(config["default_font_family"], "Vazirmatn")
         self.assertNotIn("requested_font_families", config)
 
