@@ -64,3 +64,57 @@ possible clipped or low-contrast controls.
 See [foundation contract](../../docs/FOUNDATION.md) for verification boundaries.
 Generated local files must remain outside Git or in ignored artifacts/.
 Only the approved evidence workflow curates non-sensitive captures to Git.
+
+
+## Synthetic primary-action emphasis comparison (separate experiment)
+
+\`primary_action.py\` reuses the existing \`build_host\`, synthetic labels,
+640 × 450 layout, font family/point size, QPalette implementation, pixel
+difference and Qt host capture. The primary \`QPushButton#nativePrimary\` is the
+**only** styling target. For each QStyle (\`windows11\` if installed, and
+\`Fusion\` separately), both the native/light and declared dark-palette
+contexts test these three independent emphasis methods:
+
+- \`font_weight\`: only primary-button font weight becomes DemiBold.
+- \`palette\`: only primary-button \`QPalette.Button\` and \`ButtonText\`
+  roles change; native QStyle might ignore these colors.
+- \`button_qss\`: **only** \`QPushButton#nativePrimary\` gets background,
+  text, hover, pressed, disabled, and focus-border CSS pseudo selectors.
+  No card, other control, or application-wide QSS.
+
+Each of the 2 × 2 × 3 combinations tests normal, focus via keyboard Tab,
+hover, pressed, and disabled states (60 rows per scale). Button geometry is
+fixed to the pre-emphasis native widget, and the unchanged text, base
+font family/point size and keyboard Space activation are checked. The
+comparison logs whether normal button pixels actually differ from native;
+\`QPalette\` emphasis must **not** be assumed to paint on every style.
+
+Every row has independent EXECUTED/NOT_EXECUTED, MEASURED/NOT_MEASURED,
+semantic status, and contrast metadata. Color contrast >= 4.5:1 is
+checked using explicit QSS colors or effective Qt \`ButtonText\`/\`Button\`
+palette color roles: **this is not rendered-glyph contrast**. A deliberately
+unreadable \`#555555\` on \`#565656\` synthetic button QSS and its PNG
+negative control must be detected. A hover/focus visual change that cannot
+be observed remains INCONCLUSIVE, not an invented PASS.
+
+### Invocation / evidence
+
+Install *PySide6-Essentials==6.11.2* with Python 3.12+ and Git in the Lab
+checkout; use an interactive Windows QPA for Windows-specific results:
+
+    python -m pip install "PySide6-Essentials==6.11.2"
+    python -m adapters.qt_style_probe.primary_action --output "artifacts/primary-action/native" --scale-tag runner-native
+
+The existing Windows workflow executes this alongside \`lab_runner\` for
+runner-native and both synthetic QT_SCALE_FACTOR values; evidence appears
+under \`lab-evidence/evidence/qt-style-probe/<run-id>/<scale>/primary-action/\`.
+It includes \`measurements.csv\`, \`environment.json\`, \`summary.md\`,
+\`negative_button.png\`, and 12 contact sheets when both styles are present.
+Artifacts are never committed to main.
+
+Windows hosted runners are not the accountant's Windows 11 machine; Qt
+widget captures are not physical screen grabs, synthetic scale is not
+Windows Display scaling, and QTest actions do not prove physical input.
+Inspect the saved PNGs, then validate visual contrast, focus ring,
+hover, keyboard handling, readability and 100/125/150% actual Windows
+display scaling on an interactive Windows 11 system before product adoption.
