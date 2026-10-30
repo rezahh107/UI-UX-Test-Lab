@@ -1,0 +1,431 @@
+{
+  "source_sha": "00822084a464328f4853ac11fc8c974df4c30720",
+  "run_id": "41108254028",
+  "timestamp_utc": "2026-10-30T18:38:37.589506+00:00",
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "windows_build": 26100,
+  "qt": "6.11.2",
+  "pyside": "6.11.2",
+  "qpa": "windows",
+  "available_styles": [
+    "windows11",
+    "windowsvista",
+    "Windows",
+    "Fusion"
+  ],
+  "requested_fonts": [
+    "Tahoma",
+    "Vazirmatn"
+  ],
+  "installed_tested_fonts": [
+    "Tahoma"
+  ],
+  "missing_fonts": [
+    "Vazirmatn"
+  ],
+  "per_glyph_fallback_proven": false,
+  "qt_scale_factor": null,
+  "actual_os_display_scale_verified": false,
+  "scale_tag": "runner-native",
+  "product_text_source": {
+    "repo": "rezahh107/Bank2Odoo",
+    "commit": "d06b35f41ac46936716b186fb1dfac33da983eb9",
+    "path": "bank2odoo/ui/window.py",
+    "line": 297
+  },
+  "product_text": "اطلاعات مالی بالا را شخصاً بررسی و تأیید کرده‌ام.",
+  "synthetic_text": "اطلاعات نمونه را بررسی و تأیید می‌کنم",
+  "capture": "full-resolution lossless QWidget.grab() saved before reduced previews",
+  "thresholds": {
+    "text_role": 4.5,
+    "indicator_pixel": 3.0,
+    "indicator_pixel_fraction_min": 0.05
+  },
+  "font_fixtures": {
+    "windows11_Tahoma_synthetic": {
+      "text": "اطلاعات نمونه را بررسی و تأیید می‌کنم",
+      "font_requested": "Tahoma",
+      "label_font_resolved": "Tahoma",
+      "checkbox_font_resolved": "Tahoma",
+      "dimensions_equal": true,
+      "direction_equal": true,
+      "font_equal": true,
+      "text_equal": true,
+      "label_advance": 243,
+      "label_fits": true,
+      "checkbox_fits_estimated": true,
+      "per_glyph_fallback_proven": false
+    },
+    "windows11_Tahoma_product": {
+      "text": "اطلاعات مالی بالا را شخصاً بررسی و تأیید کرده‌ام.",
+      "font_requested": "Tahoma",
+      "label_font_resolved": "Tahoma",
+      "checkbox_font_resolved": "Tahoma",
+      "dimensions_equal": true,
+      "direction_equal": true,
+      "font_equal": true,
+      "text_equal": true,
+      "label_advance": 310,
+      "label_fits": true,
+      "checkbox_fits_estimated": true,
+      "per_glyph_fallback_proven": false
+    },
+    "Fusion_Tahoma_synthetic": {
+      "text": "اطلاعات نمونه را بررسی و تأیید می‌کنم",
+      "font_requested": "Tahoma",
+      "label_font_resolved": "Tahoma",
+      "checkbox_font_resolved": "Tahoma",
+      "dimensions_equal": true,
+      "direction_equal": true,
+      "font_equal": true,
+      "text_equal": true,
+      "label_advance": 243,
+      "label_fits": true,
+      "checkbox_fits_estimated": true,
+      "per_glyph_fallback_proven": false
+    },
+    "Fusion_Tahoma_product": {
+      "text": "اطلاعات مالی بالا را شخصاً بررسی و تأیید کرده‌ام.",
+      "font_requested": "Tahoma",
+      "label_font_resolved": "Tahoma",
+      "checkbox_font_resolved": "Tahoma",
+      "dimensions_equal": true,
+      "direction_equal": true,
+      "font_equal": true,
+      "text_equal": true,
+      "label_advance": 310,
+      "label_fits": true,
+      "checkbox_fits_estimated": true,
+      "per_glyph_fallback_proven": false
+    }
+  },
+  "negative_controls": {
+    "joining": {
+      "expected_distinguished": true,
+      "zwnj_inserted_in_word": true,
+      "label_visual_changed": false,
+      "checkbox_visual_changed": false,
+      "limit": "Exact-text invalidity is deterministic; rendered shaping still needs visual review"
+    },
+    "fixture_info": {
+      "valid": {
+        "text": "اطلاعات مالی بالا را شخصاً بررسی و تأیید کرده‌ام.",
+        "font_requested": "Tahoma",
+        "label_font_resolved": "Tahoma",
+        "checkbox_font_resolved": "Tahoma",
+        "dimensions_equal": true,
+        "direction_equal": true,
+        "font_equal": true,
+        "text_equal": true,
+        "label_advance": 310,
+        "label_fits": true,
+        "checkbox_fits_estimated": true,
+        "per_glyph_fallback_proven": false
+      },
+      "malformed": {
+        "text": "اطلاعات مالی بالا را شخصاً بر‌رسی و تأیید کرده‌ام.",
+        "font_requested": "Tahoma",
+        "label_font_resolved": "Tahoma",
+        "checkbox_font_resolved": "Tahoma",
+        "dimensions_equal": true,
+        "direction_equal": true,
+        "font_equal": true,
+        "text_equal": true,
+        "label_advance": 310,
+        "label_fits": true,
+        "checkbox_fits_estimated": true,
+        "per_glyph_fallback_proven": false
+      }
+    },
+    "indicator": {
+      "max": 1.01,
+      "fraction": 0.0,
+      "visible": false,
+      "geometry": [
+        544,
+        18,
+        16,
+        16
+      ],
+      "neighbor": "#151a21"
+    },
+    "indicator_declared_ratio": 1.01,
+    "indicator_detected_as_inadequate": true,
+    "indicator_rendered_low_contrast": true,
+    "indicator_declared_vs_rendered_agree": true,
+    "limit": "Declared contrast fixture is deterministic; QWidget-grab pixels may not respect Qt QSS and need visual review"
+  },
+  "candidates": {
+    "windows11_tahoma_native": {
+      "font_requested": "Tahoma",
+      "font_resolved": "Tahoma",
+      "style_effective": "windows11",
+      "treatment": "native",
+      "role_contrasts": {
+        "text": 15.333,
+        "secondary": 9.543,
+        "disabled": 6.498,
+        "popup": 13.073,
+        "input": 13.073,
+        "input_disabled": 7.029,
+        "combo": 9.543
+      },
+      "unchecked_indicator": {
+        "max": 1.1,
+        "fraction": 0.0,
+        "visible": false,
+        "geometry": [
+          532,
+          18,
+          16,
+          16
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_indicator": {
+        "max": 17.477,
+        "fraction": 0.875,
+        "visible": true,
+        "geometry": [
+          532,
+          18,
+          16,
+          16
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_distinct": true,
+      "checkbox_local_qss": "",
+      "primary_button_local_qss": "QPushButton#nativePrimary { background-color: #86C7F0; color: #112638; border: 1px solid #86C7F0; border-radius: 5px; } QPushButton#nativePrimary:hover { background-color: #A3D6FA; } QPushButton#nativePrimary:pressed { background-color: #6CAAD6; } QPushButton#nativePrimary:focus { border: 2px solid #FFE08C; } QPushButton#nativePrimary:disabled { background-color: #303B47; color: #B7C4CE; border: 1px solid #303B47; }",
+      "other_qss_empty": true,
+      "per_glyph_fallback_proven": false
+    },
+    "windows11_tahoma_checkbox_palette": {
+      "font_requested": "Tahoma",
+      "font_resolved": "Tahoma",
+      "style_effective": "windows11",
+      "treatment": "checkbox_palette",
+      "role_contrasts": {
+        "text": 15.333,
+        "secondary": 9.543,
+        "disabled": 6.498,
+        "popup": 13.073,
+        "input": 13.073,
+        "input_disabled": 7.029,
+        "combo": 9.543
+      },
+      "unchecked_indicator": {
+        "max": 1.173,
+        "fraction": 0.0,
+        "visible": false,
+        "geometry": [
+          532,
+          18,
+          16,
+          16
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_indicator": {
+        "max": 15.333,
+        "fraction": 0.0781,
+        "visible": true,
+        "geometry": [
+          532,
+          18,
+          16,
+          16
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_distinct": true,
+      "checkbox_local_qss": "",
+      "primary_button_local_qss": "QPushButton#nativePrimary { background-color: #86C7F0; color: #112638; border: 1px solid #86C7F0; border-radius: 5px; } QPushButton#nativePrimary:hover { background-color: #A3D6FA; } QPushButton#nativePrimary:pressed { background-color: #6CAAD6; } QPushButton#nativePrimary:focus { border: 2px solid #FFE08C; } QPushButton#nativePrimary:disabled { background-color: #303B47; color: #B7C4CE; border: 1px solid #303B47; }",
+      "other_qss_empty": true,
+      "per_glyph_fallback_proven": false
+    },
+    "windows11_tahoma_unchecked_border": {
+      "font_requested": "Tahoma",
+      "font_resolved": "Tahoma",
+      "style_effective": "windows11",
+      "treatment": "unchecked_border",
+      "role_contrasts": {
+        "text": 15.333,
+        "secondary": 9.543,
+        "disabled": 6.498,
+        "popup": 13.073,
+        "input": 13.073,
+        "input_disabled": 7.029,
+        "combo": 9.543
+      },
+      "unchecked_indicator": {
+        "max": 13.925,
+        "fraction": 0.4375,
+        "visible": true,
+        "geometry": [
+          536,
+          18,
+          16,
+          16
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_indicator": {
+        "max": 17.477,
+        "fraction": 0.875,
+        "visible": true,
+        "geometry": [
+          536,
+          18,
+          16,
+          16
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_distinct": true,
+      "checkbox_local_qss": "QCheckBox#nativeApproval::indicator:unchecked {border: 2px solid #DCE7F0; background-color: #202831; }",
+      "primary_button_local_qss": "QPushButton#nativePrimary { background-color: #86C7F0; color: #112638; border: 1px solid #86C7F0; border-radius: 5px; } QPushButton#nativePrimary:hover { background-color: #A3D6FA; } QPushButton#nativePrimary:pressed { background-color: #6CAAD6; } QPushButton#nativePrimary:focus { border: 2px solid #FFE08C; } QPushButton#nativePrimary:disabled { background-color: #303B47; color: #B7C4CE; border: 1px solid #303B47; }",
+      "other_qss_empty": true,
+      "per_glyph_fallback_proven": false
+    },
+    "fusion_tahoma_native": {
+      "font_requested": "Tahoma",
+      "font_resolved": "Tahoma",
+      "style_effective": "fusion",
+      "treatment": "native",
+      "role_contrasts": {
+        "text": 15.333,
+        "secondary": 9.543,
+        "disabled": 6.498,
+        "popup": 13.073,
+        "input": 13.073,
+        "input_disabled": 7.029,
+        "combo": 9.543
+      },
+      "unchecked_indicator": {
+        "max": 1.173,
+        "fraction": 0.0,
+        "visible": false,
+        "geometry": [
+          540,
+          19,
+          14,
+          14
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_indicator": {
+        "max": 10.458,
+        "fraction": 0.1378,
+        "visible": true,
+        "geometry": [
+          540,
+          19,
+          14,
+          14
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_distinct": true,
+      "checkbox_local_qss": "",
+      "primary_button_local_qss": "QPushButton#nativePrimary { background-color: #86C7F0; color: #112638; border: 1px solid #86C7F0; border-radius: 5px; } QPushButton#nativePrimary:hover { background-color: #A3D6FA; } QPushButton#nativePrimary:pressed { background-color: #6CAAD6; } QPushButton#nativePrimary:focus { border: 2px solid #FFE08C; } QPushButton#nativePrimary:disabled { background-color: #303B47; color: #B7C4CE; border: 1px solid #303B47; }",
+      "other_qss_empty": true,
+      "per_glyph_fallback_proven": false
+    },
+    "fusion_tahoma_checkbox_palette": {
+      "font_requested": "Tahoma",
+      "font_resolved": "Tahoma",
+      "style_effective": "fusion",
+      "treatment": "checkbox_palette",
+      "role_contrasts": {
+        "text": 15.333,
+        "secondary": 9.543,
+        "disabled": 6.498,
+        "popup": 13.073,
+        "input": 13.073,
+        "input_disabled": 7.029,
+        "combo": 9.543
+      },
+      "unchecked_indicator": {
+        "max": 1.173,
+        "fraction": 0.0,
+        "visible": false,
+        "geometry": [
+          540,
+          19,
+          14,
+          14
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_indicator": {
+        "max": 10.458,
+        "fraction": 0.1378,
+        "visible": true,
+        "geometry": [
+          540,
+          19,
+          14,
+          14
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_distinct": true,
+      "checkbox_local_qss": "",
+      "primary_button_local_qss": "QPushButton#nativePrimary { background-color: #86C7F0; color: #112638; border: 1px solid #86C7F0; border-radius: 5px; } QPushButton#nativePrimary:hover { background-color: #A3D6FA; } QPushButton#nativePrimary:pressed { background-color: #6CAAD6; } QPushButton#nativePrimary:focus { border: 2px solid #FFE08C; } QPushButton#nativePrimary:disabled { background-color: #303B47; color: #B7C4CE; border: 1px solid #303B47; }",
+      "other_qss_empty": true,
+      "per_glyph_fallback_proven": false
+    },
+    "fusion_tahoma_unchecked_border": {
+      "font_requested": "Tahoma",
+      "font_resolved": "Tahoma",
+      "style_effective": "fusion",
+      "treatment": "unchecked_border",
+      "role_contrasts": {
+        "text": 15.333,
+        "secondary": 9.543,
+        "disabled": 6.498,
+        "popup": 13.073,
+        "input": 13.073,
+        "input_disabled": 7.029,
+        "combo": 9.543
+      },
+      "unchecked_indicator": {
+        "max": 13.925,
+        "fraction": 0.4898,
+        "visible": true,
+        "geometry": [
+          540,
+          19,
+          14,
+          14
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_indicator": {
+        "max": 10.458,
+        "fraction": 0.1378,
+        "visible": true,
+        "geometry": [
+          540,
+          19,
+          14,
+          14
+        ],
+        "neighbor": "#151a21"
+      },
+      "checked_distinct": true,
+      "checkbox_local_qss": "QCheckBox#nativeApproval::indicator:unchecked {border: 2px solid #DCE7F0; background-color: #202831; }",
+      "primary_button_local_qss": "QPushButton#nativePrimary { background-color: #86C7F0; color: #112638; border: 1px solid #86C7F0; border-radius: 5px; } QPushButton#nativePrimary:hover { background-color: #A3D6FA; } QPushButton#nativePrimary:pressed { background-color: #6CAAD6; } QPushButton#nativePrimary:focus { border: 2px solid #FFE08C; } QPushButton#nativePrimary:disabled { background-color: #303B47; color: #B7C4CE; border: 1px solid #303B47; }",
+      "other_qss_empty": true,
+      "per_glyph_fallback_proven": false
+    }
+  },
+  "limitations": [
+    "Qt hosted runner, not physical Windows 11 PC",
+    "QT_SCALE_FACTOR is synthetic, not OS Display scaling",
+    "QFontInfo family does not prove per-glyph fallback",
+    "Palette role contrast is not glyph-pixel contrast",
+    "Simulated QTest events and widget grabs are not physical input/screenshots"
+  ]
+}
