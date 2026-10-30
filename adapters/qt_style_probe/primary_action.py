@@ -172,6 +172,30 @@ def capture(host, controls, state, baseline, snapshots):
     return target, semantic, rendered, focus_via_tab, method
 
 
+def visual_evidence(state, target, native_normal, native_disabled,
+                    emphasized_normal, interactive_rendered):
+    """Enforce paint evidence via the existing Qt pixmap difference primitive.
+
+    Normal: native vs emphasized, captured with the same reset/focus/pointer.
+    Disabled: candidate vs native disabled AND candidate vs enabled emphasis.
+    Other interaction states retain the existing capture rendering verdict.
+    """
+    if state == "normal":
+        return lab.metrics.difference(native_normal, target)["changed"]
+    if state == "disabled":
+        return (lab.metrics.difference(native_disabled, target)["changed"]
+                and lab.metrics.difference(emphasized_normal, target)["changed"])
+    return interactive_rendered
+
+
+def assess_state(semantic_ok, readable_pair, rendered):
+    if not semantic_ok or not readable_pair:
+        return "FAIL"
+    # All five primary-action states require positive visual observation.
+    # Missing (None) evidence is not proof of rendered emphasis.
+    return "PASS" if rendered is True else "INCONCLUSIVE"
+
+
 def contact_sheet(images, title, path):
     # Full host frames preserve layout, labels and the untouched surrounding UI.
     w, h, cols = 648, 470, 2
@@ -276,7 +300,17 @@ def run(cfg, out, scale_tag):
                 QTest.qWait(70)
                 button.setFixedSize(button.size())
                 native_geom = geometry(host, button)
-                native_button = button.grab()
+                # Capture native references with *exactly* the same reset,
+                # focus, pointer and button state as the emphasized captures.
+                # A direct button.grab() here can preserve stale focus/hover
+                # left by previous candidates, yielding a false normal delta.
+                native_shots = {}
+                native_button, _, _, _, _ = capture(
+                    host, controls, "normal", None, native_shots
+                )
+                native_disabled, _, _, _, _ = capture(
+                    host, controls, "disabled", None, native_shots
+                )
                 native_font = QFontInfo(button.font())
                 original_text = button.text()
                 emphasize(button, method, theme)
@@ -293,20 +327,31 @@ def run(cfg, out, scale_tag):
                     normal_target, _, _, _, _ = capture(
                         host, controls, "normal", native_button, screenshots
                     )
-                    normal_emphasis = lab.metrics.difference(
-                        native_button, normal_target)["changed"]
+                    normal_emphasis = visual_evidence(
+                        "normal", normal_target, native_button, native_disabled,
+                        normal_target, None
+                    )
                     geom = geometry(host, button)
                     if geom != native_geom:
                         raise RuntimeError(f"Geometry changed by {candidate}: {native_geom} -> {geom}")
                     for state in STATES:
                         if state == "normal":
-                            target, semantic, rendered, focus_ok, procedure = (
+                            target, semantic, observed, focus_ok, procedure = (
                                 normal_target, True, None, False,
-                                "QWidget.grab() after synthetic keyboard activation")
+                                "matched native normal reference; QWidget.grab()")
                         else:
-                            target, semantic, rendered, focus_ok, procedure = capture(
+                            target, semantic, observed, focus_ok, procedure = capture(
                                 host, controls, state, normal_target, screenshots
                             )
+                        rendered = visual_evidence(
+                            state, target, native_button, native_disabled,
+                            normal_target, observed
+                        )
+                        if state == "disabled":
+                            procedure += ("; compare native disabled and"
+                                          " emphasized enabled QWidget.grab() references")
+                        if state == "disabled":
+                            disabled_target = target
                         current_geometry = geometry(host, button)
                         geometry_ok = current_geometry == native_geom
                         family_ok = QFontInfo(button.font()).family() == native_font.family()
@@ -322,12 +367,9 @@ def run(cfg, out, scale_tag):
                         readable_pair = ratio >= MIN_CONTRAST
                         semantic_ok = (semantic and keyboard_activated and geometry_ok
                                        and family_ok and point_ok and text_ok and scoped)
-                        if not semantic_ok or not readable_pair:
-                            assessment = "FAIL"
-                        elif rendered is False:
-                            assessment = "INCONCLUSIVE"
-                        else:
-                            assessment = "PASS"
+                        assessment = assess_state(
+                            semantic_ok, readable_pair, rendered
+                        )
                         filename = f"contact_sheet_{candidate}.png"
                         rows.append(dict(
                             style_requested=requested, style_effective=app.style().objectName(),
@@ -345,13 +387,17 @@ def run(cfg, out, scale_tag):
                             method_capture=procedure,
                             reason=("LOW_CONTRAST_ROLE_PAIR" if not readable_pair
                                     else "SEMANTIC_OR_INVARIANT_FAIL" if not semantic_ok
-                                    else "NOT_RENDERED" if rendered is False else ""),
+                                    else "NOT_RENDERED" if rendered is not True else ""),
                             filename=filename,
                         ))
                     contact_sheet(screenshots, candidate, out / filename)
                     env["baselines"][candidate] = {
                         "native_geometry": native_geom, "native_font": native_font.family(),
                         "method_geometry": geom, "normal_emphasis_changed": normal_emphasis,
+                        "disabled_vs_native_changed": lab.metrics.difference(
+                            native_disabled, disabled_target)["changed"],
+                        "disabled_vs_enabled_changed": lab.metrics.difference(
+                            normal_target, disabled_target)["changed"],
                         "keyboard_space_activated": keyboard_activated,
                     }
                 finally:
