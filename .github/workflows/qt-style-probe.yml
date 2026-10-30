@@ -59,6 +59,8 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "Primary action probe failed on $scale" }
             python -m adapters.qt_style_probe.whole_form --output "artifacts/qt-style-probe/$scale/whole-form" --scale-tag $scale
             if ($LASTEXITCODE -ne 0) { throw "Whole-form probe failed on $scale" }
+            python -m adapters.qt_style_probe.approval_equivalence --output "artifacts/qt-style-probe/$scale/approval-equivalence" --scale-tag $scale
+            if ($LASTEXITCODE -ne 0) { throw "Product-equivalent approval probe failed on $scale" }
           }
           Remove-Item Env:QT_SCALE_FACTOR -ErrorAction SilentlyContinue
       - name: Commit ONLY compact results to lab-evidence
