@@ -127,3 +127,56 @@ Windows Display scaling, and QTest actions do not prove physical input.
 Inspect the saved PNGs, then validate visual contrast, focus ring,
 hover, keyboard handling, readability and 100/125/150% actual Windows
 display scaling on an interactive Windows 11 system before product adoption.
+
+
+## Fusion dark whole-form and Persian approval diagnostic (bounded)
+
+\`whole_form.py\` reuses this Lab's synthetic \`build_host()\`, Qt
+\`QWidget.grab()\`, QTest events, palette utilities and the previously tested
+**primary-button-only** scoped QSS. It does not import or execute Bank2Odoo.
+It reads no product data. The static, public UI string
+«اطلاعات مالی بالا را شخصاً بررسی و تأیید کرده‌ام.» was checked in read-only
+Bank2Odoo \`bank2odoo/ui/window.py\` at \`d06b35f\`, line 297.
+
+The experiment compares Windows11 (only if exposed by QStyleFactory) and
+Fusion in the SAME dark QPalette with the original synthetic form. Each
+available installed Tahoma/Vazirmatn font is recorded separately by QFontInfo;
+an unavailable font is NOT tested. This does not prove glyph-by-glyph fallback.
+
+Per style/font, native checkbox painting is compared with (a) a local
+checkbox-only QPalette override and (b) a minimal
+\`QCheckBox#nativeApproval::indicator:unchecked\` QSS border. No global QSS,
+custom hit testing or changed keyboard semantics are added. Both static UI
+sentences are captured independently in QCheckBox and QLabel under equal
+font, RTL direction, text and fixed widget geometry. A deliberate incorrect
+ZWNJ within «بررسی» and an intentionally low-contrast unchecked indicator
+are saved as independent negative controls. Exact-text invalidity is tested
+deterministically; rendering differences are reported, not presumed.
+
+The synthetic matrix exercises unchecked, checkbox keyboard focus, checked
+and unchecked via Space and full-row clicks, primary button focus, ComboBox
+choice/popup and disabled controls. Color-role contrast is recorded for
+checkbox labels, inputs, ComboBox, popup, secondary buttons and disabled
+controls. The indicator's actual Qt pixels are evaluated against a sampled
+adjacent surface (3:1 indicator threshold and 5% of indicator pixels).
+This simple threshold is diagnostic rather than full accessibility proof.
+Unchanged/insufficient indicator evidence is INCONCLUSIVE, never automatically
+PASS. Semantic/contrast defects are FAIL.
+
+Each run first saves **full native-pixel-resolution lossless PNGs**, including
+separate native popup captures, then generates reduced contact-sheet previews.
+The existing Windows workflow runs this additional diagnostic in
+\`evidence/qt-style-probe/<run-id>/<scale>/whole-form/\` on \`lab-evidence\`.
+Its three scale contexts remain runner-native, QT_SCALE_FACTOR=1.25 and 1.5.
+The prior evidence runs are immutable, and this experiment requires a distinct
+run-ID to identify the exact evaluator and feature commit.
+
+Run independently after installing PySide6-Essentials==6.11.2:
+
+    python -m adapters.qt_style_probe.whole_form --output "artifacts/qt-style-probe/local/whole-form" --scale-tag local-synthetic
+
+**NOT_PROVEN**: actual Windows 11 native OS scale (100/125/150%),
+physical keyboard/mouse, real device font fallback, final Persian readability,
+assistive tech or glyph-pixel contrast. A specialist must inspect the full
+PNG indicator (including unchecked), glyph joining and focus before deciding
+whether the local checkbox treatment is acceptable.
