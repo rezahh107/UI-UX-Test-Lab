@@ -223,6 +223,23 @@ class PrimaryActionTests(unittest.TestCase):
         self.assertEqual(primary.assess_state(False, True, True), "FAIL")
         self.assertEqual(primary.assess_state(True, False, True), "FAIL")
 
+    def test_native_disabled_reference_is_followed_by_enabled_space_ready_state(self):
+        snapshots = {}
+        primary.capture(self.host, self.controls, "disabled", None, snapshots)
+        self.assertFalse(self.button.isEnabled())
+        normal, semantic, _, _, _ = primary.capture(
+            self.host, self.controls, "normal", None, snapshots
+        )
+        self.assertFalse(normal.isNull())
+        self.assertTrue(semantic)
+        self.assertTrue(self.button.isEnabled())
+        fired = []
+        self.button.clicked.connect(lambda checked=False: fired.append(True))
+        self.button.setFocus(Qt.FocusReason.TabFocusReason)
+        QTest.keyClick(self.button, Qt.Key.Key_Space)
+        self.assertEqual(fired, [True],
+                         "Native reference capture must leave the candidate input-ready")
+
     def test_missing_windows11_is_not_executed_and_csv_contract_preserved(self):
         # Suppress the font-weight treatment, so the actual Qt capture is a
         # no-op. An end-to-end normal row MUST become inconclusive.
