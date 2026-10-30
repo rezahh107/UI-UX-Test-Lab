@@ -27,10 +27,11 @@ from PySide6.QtWidgets import (
 from . import lab_runner as lab
 from . import whole_form as whole
 from . import primary_action as primary
+from . import font_runtime
 
 PRODUCT_COMMIT = "d06b35f41ac46936716b186fb1dfac33da983eb9"
 STYLES = ("Fusion", "windows11")
-FONTS = ("Tahoma", "Vazirmatn")
+FONTS = (font_runtime.FAMILY,)  # canonical; --compare-tahoma is non-default
 TREATMENTS = ("native", "unchecked_border")
 STATES = ("unchecked", "focus_tab", "checked_space", "unchecked_space",
           "checked_row", "unchecked_row", "disabled")
@@ -67,6 +68,9 @@ def make_equivalent(cfg, style_name, font, treatment):
     lab.apply_palette(app, cfg, True)
     app.setFont(QFont(font, cfg["font_point_size"]))
     host, controls = lab.build_host(cfg, cfg["variants"][0])
+    if font == font_runtime.FAMILY:
+        font_runtime.assert_widget_font(host)
+        font_runtime.assert_widget_font(controls["approval"])
     cb = controls["approval"]
     # Use the same public product UI string and setup, not real financial data.
     cb.setText(whole.PRODUCT_TEXT)
@@ -188,7 +192,7 @@ def save_preview(screenshots, path, title):
     preview.fill(QColor("#F6F7F9"))
     painter = QPainter(preview)
     painter.setPen(QColor("#152030"))
-    painter.setFont(QFont("Arial", 10))
+    painter.setFont(QFont(font_runtime.FAMILY, 10))
     painter.drawText(8, 25, title + " — reduced, not source pixels")
     for index, state in enumerate(STATES):
         x, y = index % 2 * w, 38 + (index // 2) * h
@@ -199,12 +203,14 @@ def save_preview(screenshots, path, title):
         raise RuntimeError("Unable to save reduced preview: " + str(path))
 
 
-def run(cfg, out, scale_tag):
+def run(cfg, out, scale_tag, *, compare_tahoma=False):
     out.mkdir(parents=True, exist_ok=True)
     app = QApplication.instance() or QApplication([])
     app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
     available = {x.casefold(): x for x in QStyleFactory.keys()}
+    font_evidence = font_runtime.initialize_font(app, cfg["font_point_size"])
     installed = {x.casefold(): x for x in QFontDatabase.families()}
+    requested_fonts = FONTS + (("Tahoma",) if compare_tahoma else ())
     env = {
         "lab_head": os.getenv("GITHUB_SHA"), "run_id": os.getenv("GITHUB_RUN_ID"),
         "product_ref": PRODUCT_COMMIT, "product_class_imported": False,
@@ -217,7 +223,9 @@ def run(cfg, out, scale_tag):
         "qpa": app.platformName(), "scale_tag": scale_tag,
         "qt_scale_factor": os.environ.get("QT_SCALE_FACTOR"),
         "requested_styles": list(STYLES), "available_styles": list(available.values()),
-        "requested_fonts": list(FONTS), "installed_fonts": list(installed.values()),
+        "requested_fonts": list(requested_fonts), "installed_fonts": list(installed.values()),
+        "canonical_font": font_evidence,
+        "comparison_mode": "non-default Tahoma comparison" if compare_tahoma else "canonical",
         "physical_windows11_environment": False,
         "os_display_scale_100_125_150": {
             "100": "NOT_EXECUTED", "125": "NOT_EXECUTED",
@@ -235,7 +243,7 @@ def run(cfg, out, scale_tag):
         ],
     }
     rows = []
-    for font_request in FONTS:
+    for font_request in requested_fonts:
         resolved_font = installed.get(font_request.casefold())
         for style_request in STYLES:
             style_key = available.get(style_request.casefold())
@@ -393,9 +401,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--scale-tag", required=True)
+    parser.add_argument("--compare-tahoma", action="store_true", help="Explicit non-default system-font comparison")
     args = parser.parse_args()
     cfg, _ = lab.load_config()
-    run(cfg, args.output, args.scale_tag)
+    run(cfg, args.output, args.scale_tag, compare_tahoma=args.compare_tahoma)
 
 
 if __name__ == "__main__":

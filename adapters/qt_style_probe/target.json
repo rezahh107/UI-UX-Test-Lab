@@ -36,11 +36,7 @@
       "description": "Application dark QPalette plus card-only QSS"
     }
   ],
-  "requested_font_families": [
-    "Vazirmatn",
-    "Tahoma",
-    "Segoe UI"
-  ],
+  "default_font_family": "Vazirmatn",
   "font_point_size": 11,
   "window_width": 640,
   "window_height": 450,

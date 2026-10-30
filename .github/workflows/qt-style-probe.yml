@@ -3,7 +3,7 @@ name: Qt Native Styling Lab (diagnostic only)
 on:
   workflow_dispatch:
   push:
-    branches: [feature/qt-style-probe-windows-ci, feature/qt-primary-action-comparison, feature/qt-fusion-dark-readability]
+    branches: [feature/qt-style-probe-windows-ci, feature/qt-primary-action-comparison, feature/qt-fusion-dark-readability, feature/bundled-vazirmatn-v33-003]
 
 permissions:
   contents: write # only remote push is to lab-evidence
@@ -34,6 +34,11 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check "PySide6-Essentials==6.11.2"
           if ($LASTEXITCODE -ne 0) { throw "PySide6 dependency installation failed" }
+      - name: Prove bundled font registration with no OS-installed Vazirmatn
+        shell: pwsh
+        run: |
+          python -m adapters.qt_style_probe.font_runtime --require-system-absent
+          if ($LASTEXITCODE -ne 0) { throw "Bundled-font independence preflight failed" }
       - name: Preserve foundation verification and unit tests
         shell: pwsh
         run: |

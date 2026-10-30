@@ -14,6 +14,7 @@ try:
     from adapters.qt_style_probe import lab_runner as lab
     from adapters.qt_style_probe import primary_action as primary
     from adapters.qt_style_probe import whole_form as whole
+    from adapters.qt_style_probe import font_runtime
     QT = True
 except ImportError:
     QT = False
@@ -36,6 +37,7 @@ class WholeFormQtRegressions(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+        font_runtime.initialize_font(cls.app)
         cls.cfg, _ = lab.load_config()
 
     def setUp(self):
@@ -80,7 +82,7 @@ class WholeFormQtRegressions(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             name = "product_fixture"
             meta, label, checkbox = whole.text_fixture(
-                whole.PRODUCT_TEXT, QFont("Tahoma", 11), name, Path(folder)
+                whole.PRODUCT_TEXT, QFont(font_runtime.FAMILY, 11), name, Path(folder)
             )
             self.assertTrue(meta["text_equal"])
             self.assertTrue(meta["dimensions_equal"])
@@ -96,7 +98,7 @@ class WholeFormQtRegressions(unittest.TestCase):
     def test_malformed_joining_fixture_is_distinguished(self):
         with tempfile.TemporaryDirectory() as folder:
             controls = whole.negative_controls(
-                self.app, self.cfg, Path(folder), QFont("Tahoma", 11)
+                self.app, self.cfg, Path(folder), QFont(font_runtime.FAMILY, 11)
             )
             self.assertTrue(controls["joining"]["expected_distinguished"])
             self.assertTrue(controls["joining"]["zwnj_inserted_in_word"])
@@ -118,13 +120,10 @@ class WholeFormQtRegressions(unittest.TestCase):
 
     def test_missing_windows11_not_exec_and_matrix_and_full_pngs(self):
         # Model an unavailable style without silently substituting Fusion.
-        families = ["Tahoma"]
         with tempfile.TemporaryDirectory() as folder:
             out = Path(folder)
             with patch.object(whole.QStyleFactory, "keys",
-                              return_value=["Fusion"]), patch.object(
-                                  whole.QFontDatabase, "families",
-                                  return_value=families):
+                              return_value=["Fusion"]):
                 whole.run(self.cfg, out, "test-no-windows11")
             with (out/"measurements.csv").open(encoding="utf-8", newline="") as f:
                 reader = csv.DictReader(f)
@@ -145,7 +144,7 @@ class WholeFormQtRegressions(unittest.TestCase):
             self.assertEqual(len(list(out.glob("*_indicator_unchecked.png"))), 3)
             self.assertEqual(len(list(out.glob("*_indicator_checked.png"))), 3)
             meta = json.loads((out/"environment.json").read_text(encoding="utf-8"))
-            self.assertEqual(meta["installed_tested_fonts"], ["Tahoma"])
+            self.assertEqual(meta["installed_tested_fonts"], [font_runtime.FAMILY])
             self.assertTrue(meta["negative_controls"]["indicator_detected_as_inadequate"])
             self.assertFalse(meta["actual_os_display_scale_verified"])
             self.assertTrue((out/"summary.md").exists())

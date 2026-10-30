@@ -13,6 +13,7 @@ try:
     from PySide6.QtWidgets import QApplication, QStyleFactory
     from adapters.qt_style_probe import lab_runner as lab
     from adapters.qt_style_probe import primary_action as primary
+    from adapters.qt_style_probe import font_runtime
     QT = True
 except ImportError:
     QT = False
@@ -23,6 +24,7 @@ class PrimaryActionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+        font_runtime.initialize_font(cls.app)
         cls.cfg, _ = lab.load_config()
 
     def setUp(self):

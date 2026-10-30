@@ -21,6 +21,7 @@ try:
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication
     from adapters.qt_style_probe import lab_runner as probe
+    from adapters.qt_style_probe import font_runtime
     QT_AVAILABLE = True
 except ImportError:
     QT_AVAILABLE = False
@@ -50,6 +51,7 @@ class QtEvidenceIntegrityTests(unittest.TestCase):
         # Windows CI provides native QPA; offscreen local execution remains
         # synthetic and is not a substitute for a physical desktop session.
         cls.app = QApplication.instance() or QApplication([])
+        font_runtime.initialize_font(cls.app)
 
     def setUp(self):
         self.config, _ = probe.load_config()

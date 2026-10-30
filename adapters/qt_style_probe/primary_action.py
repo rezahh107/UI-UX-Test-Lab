@@ -21,6 +21,7 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from . import lab_runner as lab
+from . import font_runtime
 
 METHODS = ("font_weight", "palette", "button_qss")
 THEMES = ("light", "dark")
@@ -203,7 +204,7 @@ def contact_sheet(images, title, path):
     sheet.fill(QColor("#F5F6F8"))
     painter = QPainter(sheet)
     painter.setPen(QColor("#182638"))
-    painter.setFont(QFont("Arial", 10))
+    painter.setFont(QFont(font_runtime.FAMILY, 10))
     painter.drawText(10, 24, title + " — synthetic QWidget.grab(); not desktop")
     for n, state in enumerate(STATES):
         x, y = (n % cols) * w, 35 + (n // cols) * h
@@ -240,10 +241,8 @@ def negative_button_control(out):
 def run(cfg, out, scale_tag):
     app = QApplication.instance() or QApplication([])
     app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-    families = {name.casefold(): name for name in QFontDatabase.families()}
-    family = next((families[f.casefold()] for f in cfg["requested_font_families"]
-                   if f.casefold() in families), app.font().family())
-    app.setFont(QFont(family, cfg["font_point_size"]))
+    font_evidence = font_runtime.initialize_font(app, cfg["font_point_size"])
+    family = font_runtime.FAMILY
     style_keys = {name.casefold(): name for name in QStyleFactory.keys()}
     env = {
         "source_sha": os.getenv("GITHUB_SHA"),
@@ -258,6 +257,7 @@ def run(cfg, out, scale_tag):
         "requested_styles": cfg["requested_styles"], "available_styles": list(style_keys.values()),
         "themes": list(THEMES), "methods": list(METHODS), "states": list(STATES),
         "font_family": family, "font_point_size": cfg["font_point_size"],
+        "canonical_font": font_evidence,
         "synthetic_tokens": TOKENS, "contrast_threshold": MIN_CONTRAST,
         "contrast_limit": "color-role/token pairs, not actual rendered glyph pixel contrast",
         "capture_method": "QWidget.grab() with QTest synthetic interactions",
@@ -314,9 +314,12 @@ def run(cfg, out, scale_tag):
                 native_button, _, _, _, _ = capture(
                     host, controls, "normal", None, native_shots
                 )
+                font_runtime.assert_widget_font(host)
+                font_runtime.assert_widget_font(button)
                 native_font = QFontInfo(button.font())
                 original_text = button.text()
                 emphasize(button, method, theme)
+                font_runtime.assert_widget_font(button)
                 QCoreApplication.processEvents()
                 QTest.qWait(50)
                 clicked = []
