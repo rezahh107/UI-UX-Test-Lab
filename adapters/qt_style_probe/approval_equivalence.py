@@ -18,7 +18,7 @@ from pathlib import Path
 
 from PySide6 import __version__ as PYSIDE_VERSION
 from PySide6.QtCore import QPoint, Qt, QCoreApplication, qVersion
-from PySide6.QtGui import QFont, QFontDatabase, QFontInfo, QPalette
+from PySide6.QtGui import QFont, QFontDatabase, QFontInfo, QPalette, QColor, QImage, QPainter
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (
     QApplication, QProxyStyle, QStyle, QStyleFactory, QStyleOptionButton,
@@ -177,8 +177,26 @@ def capture_case(host, controls, state, out, candidate):
     full = host.grab()
     name = f"{candidate}_{state}.png"
     whole.full_png(full, out / name)
-    return {"semantic": bool(semantic),
+    return {"semantic": bool(semantic), "shot": full,
             "focus_visible": focus_visible, "raw_png": name}
+
+
+def save_preview(screenshots, path, title):
+    # Reduced reference is generated only after every source frame is saved.
+    w, h = 430, 310
+    preview = QImage(w * 2, 38 + h * 4, QImage.Format.Format_RGB32)
+    preview.fill(QColor("#F6F7F9"))
+    painter = QPainter(preview)
+    painter.setPen(QColor("#152030"))
+    painter.setFont(QFont("Arial", 10))
+    painter.drawText(8, 25, title + " — reduced, not source pixels")
+    for index, state in enumerate(STATES):
+        x, y = index % 2 * w, 38 + (index // 2) * h
+        painter.drawText(x + 8, y + 17, state)
+        painter.drawPixmap(x + 5, y + 24, w - 10, h - 29, screenshots[state])
+    painter.end()
+    if not preview.save(str(path), "PNG"):
+        raise RuntimeError("Unable to save reduced preview: " + str(path))
 
 
 def run(cfg, out, scale_tag):
@@ -250,7 +268,7 @@ def run(cfg, out, scale_tag):
                 try:
                     for state in STATES:
                         outcome = capture_case(host, controls, state, out, candidate)
-                        screenshots[state] = host.grab()
+                        screenshots[state] = outcome.pop("shot")
                         records[state] = outcome
                     # Capture the unchecked state under neutral conditions.
                     cb.setEnabled(True)
@@ -316,9 +334,8 @@ def run(cfg, out, scale_tag):
                                       for key, value in records.items()},
                     }
                     # Always save original frames before any reduced preview.
-                    whole.contact_sheet(
-                        {k: screenshots[k] for k in STATES},
-                        out / f"preview_{candidate}.png", candidate
+                    save_preview(
+                        screenshots, out / f"preview_{candidate}.png", candidate
                     )
                 finally:
                     host.close()
