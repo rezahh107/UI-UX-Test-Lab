@@ -43,6 +43,7 @@ FIELDS = ("candidate", "style_requested", "style_effective", "font_requested",
           "indicator_contrast_fraction", "indicator_visible",
           "checked_distinct", "focus_visual_change", "text_role_contrast",
           "button_role_contrast", "disabled_role_contrast", "popup_role_contrast",
+          "input_role_contrast", "combo_role_contrast", "disabled_input_role_contrast",
           "keyboard_space", "row_click", "full_size", "dpr",
           "reason", "filename")
 
@@ -168,8 +169,23 @@ def role_contrasts(controls):
         popup_pal.color(QPalette.ColorRole.Text).name(),
         popup_pal.color(QPalette.ColorRole.Base).name(),
     )
+    input_pal = controls["amount"].palette()
+    input_ratio = contrast_color(
+        input_pal.color(QPalette.ColorRole.Text).name(),
+        input_pal.color(QPalette.ColorRole.Base).name(),
+    )
+    input_disabled = contrast_color(
+        input_pal.color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text).name(),
+        input_pal.color(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Base).name(),
+    )
+    combo_pal = controls["combo"].palette()
+    combo_ratio = contrast_color(
+        combo_pal.color(QPalette.ColorRole.ButtonText).name(),
+        combo_pal.color(QPalette.ColorRole.Button).name(),
+    )
     return {"text": text, "secondary": secondary,
-            "disabled": disabled, "popup": popup}
+            "disabled": disabled, "popup": popup, "input": input_ratio,
+            "input_disabled": input_disabled, "combo": combo_ratio}
 
 
 def capture_state(host, controls, state, out, stem):
@@ -475,10 +491,11 @@ def run(cfg, out, scale_tag):
                     indicator_visible = unchecked["visible"] and checked["visible"]
                     contrast_ok = all(
                         roles[name] >= TEXT_THRESHOLD
-                        for name in ("text", "secondary", "popup")
+                        for name in ("text", "secondary", "input", "combo", "popup")
                     )
                     disabled_readable = (state != "disabled" or
-                                         roles["disabled"] >= TEXT_THRESHOLD)
+                                         (roles["disabled"] >= TEXT_THRESHOLD and
+                                          roles["input_disabled"] >= TEXT_THRESHOLD))
                     if not semantic or not contrast_ok or not disabled_readable:
                         assessment = "FAIL"
                     elif (not indicator_visible or not distinct or
@@ -502,6 +519,9 @@ def run(cfg, out, scale_tag):
                         button_role_contrast=roles["secondary"],
                         disabled_role_contrast=roles["disabled"],
                         popup_role_contrast=roles["popup"],
+                        input_role_contrast=roles["input"],
+                        combo_role_contrast=roles["combo"],
+                        disabled_input_role_contrast=roles["input_disabled"],
                         keyboard_space=result["keyboard"], row_click=result["row"],
                         full_size=f"{shots[state].width()}x{shots[state].height()}",
                         dpr=shots[state].devicePixelRatio(),
