@@ -86,6 +86,10 @@ def make_equivalent(cfg, style_name, font, treatment):
     host.show()
     QCoreApplication.processEvents()
     QTest.qWait(55)
+    if font == font_runtime.FAMILY:
+        font_runtime.assert_widget_font(host)
+        font_runtime.assert_widget_font(cb)
+        font_runtime.assert_widget_font(controls["button"])
     return host, controls, proxy
 
 
