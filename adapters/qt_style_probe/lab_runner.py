@@ -450,6 +450,9 @@ def run(config, config_hash, out, scale_tag):
                 host.show()
                 QCoreApplication.processEvents()
                 QTest.qWait(80)
+                font_runtime.assert_widget_font(host)
+                font_runtime.assert_widget_font(w["approval"])
+                font_runtime.assert_widget_font(w["button"])
                 actual_style = app.style().objectName()
                 palette = app.palette()
                 color_fg = palette.color(QPalette.ColorRole.Text)
@@ -536,8 +539,6 @@ def run(config, config_hash, out, scale_tag):
                         card_qss_local=scope_ok,
                         filename=f"contact_sheet_{candidate}.png",
                     ))
-                font_runtime.assert_widget_font(host)
-                font_runtime.assert_widget_font(controls["approval"])
                 make_sheet(snapshots, candidate, out / f"contact_sheet_{candidate}.png")
             finally:
                 host.close()
