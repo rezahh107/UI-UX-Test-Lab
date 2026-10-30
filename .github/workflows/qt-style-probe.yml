@@ -3,7 +3,7 @@ name: Qt Native Styling Lab (diagnostic only)
 on:
   workflow_dispatch:
   push:
-    branches: [feature/qt-style-probe-windows-ci, feature/qt-primary-action-comparison]
+    branches: [feature/qt-style-probe-windows-ci, feature/qt-primary-action-comparison, feature/qt-fusion-dark-readability]
 
 permissions:
   contents: write # only remote push is to lab-evidence
@@ -57,6 +57,8 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "Probe failed on $scale" }
             python -m adapters.qt_style_probe.primary_action --output "artifacts/qt-style-probe/$scale/primary-action" --scale-tag $scale
             if ($LASTEXITCODE -ne 0) { throw "Primary action probe failed on $scale" }
+            python -m adapters.qt_style_probe.whole_form --output "artifacts/qt-style-probe/$scale/whole-form" --scale-tag $scale
+            if ($LASTEXITCODE -ne 0) { throw "Whole-form probe failed on $scale" }
           }
           Remove-Item Env:QT_SCALE_FACTOR -ErrorAction SilentlyContinue
       - name: Commit ONLY compact results to lab-evidence
