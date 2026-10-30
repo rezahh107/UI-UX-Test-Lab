@@ -447,6 +447,10 @@ def run(cfg, out, scale_tag, *, compare_tahoma=False):
                 host.show()
                 QCoreApplication.processEvents()
                 QTest.qWait(80)
+                if font_name == font_runtime.FAMILY:
+                    font_runtime.assert_widget_font(host)
+                    font_runtime.assert_widget_font(cb)
+                    font_runtime.assert_widget_font(controls["button"])
                 resolved = QFontInfo(cb.font()).family()
                 roles = role_contrasts(controls)
                 shots = {}
