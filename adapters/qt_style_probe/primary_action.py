@@ -305,11 +305,14 @@ def run(cfg, out, scale_tag):
                 # A direct button.grab() here can preserve stale focus/hover
                 # left by previous candidates, yielding a false normal delta.
                 native_shots = {}
-                native_button, _, _, _, _ = capture(
-                    host, controls, "normal", None, native_shots
-                )
                 native_disabled, _, _, _, _ = capture(
                     host, controls, "disabled", None, native_shots
+                )
+                # End native reference capture in the enabled, neutral state.
+                # Otherwise Space on the later candidate is ignored because
+                # the preceding native disabled capture leaves it disabled.
+                native_button, _, _, _, _ = capture(
+                    host, controls, "normal", None, native_shots
                 )
                 native_font = QFontInfo(button.font())
                 original_text = button.text()
