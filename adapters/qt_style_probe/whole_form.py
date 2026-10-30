@@ -366,12 +366,6 @@ def run(cfg, out, scale_tag):
     for font_name in installed:
         font = QFont(font_name, cfg["font_point_size"])
         app.setFont(font)
-        if not env["negative_controls"]:
-            env["negative_controls"] = negative_controls(app, cfg, out, font)
-        for phrase, text in (("synthetic", cfg["fields"]["approval"]),
-                             ("product", PRODUCT_TEXT)):
-            fixture, _, _ = text_fixture(text, font, f"text_{font_name}_{phrase}", out)
-            env["font_fixtures"][f"{font_name}_{phrase}"] = fixture
         for style_name in STYLES:
             for treatment in TREATMENTS:
                 candidate = f"{style_name.casefold()}_{font_name.lower()}_{treatment}"
@@ -394,6 +388,20 @@ def run(cfg, out, scale_tag):
                 app.setStyle(style)
                 lab.apply_palette(app, cfg, True)
                 app.setFont(font)
+                # Text fixtures belong to the same dark QStyle and font
+                # context as the associated whole-form experiment.
+                if treatment == TREATMENTS[0]:
+                    if not env["negative_controls"]:
+                        env["negative_controls"] = negative_controls(app, cfg, out, font)
+                    for phrase, text in (("synthetic", cfg["fields"]["approval"]),
+                                         ("product", PRODUCT_TEXT)):
+                        fixture, _, _ = text_fixture(
+                            text, font,
+                            f"text_{style_name.lower()}_{font_name}_{phrase}", out
+                        )
+                        env["font_fixtures"][
+                            f"{style_name}_{font_name}_{phrase}"
+                        ] = fixture
                 host, controls = lab.build_host(cfg, cfg["variants"][0])
                 secondary_buttons = [
                     b for b in host.findChildren(QPushButton)
