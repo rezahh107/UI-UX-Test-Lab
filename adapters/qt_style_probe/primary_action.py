@@ -190,7 +190,7 @@ def contact_sheet(images, title, path):
         raise RuntimeError("Cannot save " + str(path))
 
 
-def negative_button_control():
+def negative_button_control(out):
     # Same button contrast measurement, but an intentionally unreadable pair.
     from PySide6.QtWidgets import QPushButton
     button = QPushButton("دکمهٔ نمونهٔ کم‌کنتراست")
@@ -203,6 +203,8 @@ def negative_button_control():
     button.show()
     QCoreApplication.processEvents()
     shot = button.grab()
+    if not shot.save(str(out / "negative_button.png")):
+        raise RuntimeError("Cannot save negative contrast control capture")
     ratio = contrast_pair("#555555", "#565656")
     button.close()
     return {"ratio": ratio, "threshold": MIN_CONTRAST, "detected":
@@ -355,7 +357,7 @@ def run(cfg, out, scale_tag):
                 finally:
                     host.close()
                     QCoreApplication.processEvents()
-    env["negative_control"] = negative_button_control()
+    env["negative_control"] = negative_button_control(out)
     if not env["negative_control"]["detected"]:
         raise RuntimeError("Low contrast button negative control was missed")
     out.mkdir(parents=True, exist_ok=True)
