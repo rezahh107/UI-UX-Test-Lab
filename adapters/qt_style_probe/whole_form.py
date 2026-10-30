@@ -305,8 +305,8 @@ def text_fixture(text, font, name, out, checked=False):
 
 def negative_controls(app, cfg, out, font):
     valid = PRODUCT_TEXT
-    malformed = valid.replace("بررسی", "بر\u200cرسی", 1)
-    if malformed == valid or malformed.replace("بر\u200cرسی", "بررسی", 1) != valid:
+    malformed = valid.replace("بررسی", "بررس\u200cی", 1)
+    if malformed == valid or malformed.replace("بررس\u200cی", "بررسی", 1) != valid:
         raise RuntimeError("Malformed joining fixture did not differ as expected")
     valid_info, label_valid, checkbox_valid = text_fixture(
         valid, font, "negative_valid", out
@@ -316,10 +316,10 @@ def negative_controls(app, cfg, out, font):
     )
     joining = {
         "expected_distinguished": malformed != valid,
-        "zwnj_inserted_in_word": "بر\u200cرسی" in malformed,
+        "zwnj_inserted_in_word": "بررس\u200cی" in malformed,
         "label_visual_changed": lab.metrics.difference(label_valid, label_bad)["changed"],
         "checkbox_visual_changed": lab.metrics.difference(checkbox_valid, checkbox_bad)["changed"],
-        "limit": "Exact-text invalidity is deterministic; rendered shaping still needs visual review",
+        "limit": "Breaks normally joining Seen–Yeh; exact invalidity is deterministic; rendered shaping independently observed",
     }
     control = lab.FullRowCheckBox("نشانگر عمداً کم‌رنگ")
     control.setObjectName("nativeApproval")
