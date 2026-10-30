@@ -20,7 +20,7 @@ from PySide6.QtCore import QPoint, Qt, QCoreApplication, qVersion
 from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontInfo, QFontMetrics, QImage, QPainter, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import (QApplication, QCheckBox, QFrame, QLabel, QStyle,
-                               QStyleFactory, QStyleOptionButton, QVBoxLayout, QWidget)
+                               QStyleFactory, QStyleOptionButton, QVBoxLayout, QWidget, QPushButton)
 
 from . import lab_runner as lab
 from . import primary_action as primary
@@ -187,6 +187,7 @@ def capture_state(host, controls, state, out, stem):
     semantic, keyboard, row = True, False, False
     focus_delta = None
     neutral = cb.grab()
+    unfocused_button = button.grab()
     if state == "checkbox_focus":
         combo.setFocus(Qt.FocusReason.TabFocusReason)
         QTest.keyClick(combo, Qt.Key.Key_Tab)
@@ -220,9 +221,9 @@ def capture_state(host, controls, state, out, stem):
         cb.setFocus(Qt.FocusReason.TabFocusReason)
         QTest.keyClick(cb, Qt.Key.Key_Tab)
         semantic = button.hasFocus()
-        focus_delta = lab.metrics.difference(button.grab(), button.grab())["changed"]
-        # The native Qt focus state is still explicitly recorded and must be
-        # reviewed in the full host PNG; do not fabricate a positive pixel delta.
+        # Focus must actually be painted, not merely held in Qt state.
+        # Compare a matched pre-Tab target (captured before the event).
+        focus_delta = lab.metrics.difference(unfocused_button, button.grab())["changed"]
     elif state == "combo_selected":
         combo.setFocus()
         QTest.keyClick(combo, Qt.Key.Key_Down)
@@ -394,9 +395,13 @@ def run(cfg, out, scale_tag):
                 lab.apply_palette(app, cfg, True)
                 app.setFont(font)
                 host, controls = lab.build_host(cfg, cfg["variants"][0])
-                controls["secondary"] = host.findChildren(
-                    __import__("PySide6.QtWidgets", fromlist=["QPushButton"]).QPushButton
-                )[1]
+                secondary_buttons = [
+                    b for b in host.findChildren(QPushButton)
+                    if b.text() == cfg["fields"]["secondary"]
+                ]
+                if len(secondary_buttons) != 1:
+                    raise RuntimeError("Synthetic secondary button not uniquely found")
+                controls["secondary"] = secondary_buttons[0]
                 cb = controls["approval"]
                 apply_treatment(cb, treatment, cfg)
                 primary.emphasize(controls["button"], "button_qss", "dark")
@@ -453,8 +458,10 @@ def run(cfg, out, scale_tag):
                 }
                 for state in STATES:
                     result = infos[state]
-                    semantic = (result["semantic"] and distinct
-                                and bool(controls["button"].styleSheet()))
+                    semantic = (result["semantic"]
+                                and bool(controls["button"].styleSheet())
+                                and not controls["card"].styleSheet()
+                                and env["candidates"][candidate]["other_qss_empty"])
                     # Indicator unreadability is a distinct blocking concern,
                     # not a successful checkbox semantic test.
                     indicator_visible = unchecked["visible"] and checked["visible"]
@@ -462,11 +469,13 @@ def run(cfg, out, scale_tag):
                         roles[name] >= TEXT_THRESHOLD
                         for name in ("text", "secondary", "popup")
                     )
-                    if not semantic or not contrast_ok:
+                    disabled_readable = (state != "disabled" or
+                                         roles["disabled"] >= TEXT_THRESHOLD)
+                    if not semantic or not contrast_ok or not disabled_readable:
                         assessment = "FAIL"
-                    elif not indicator_visible:
-                        assessment = "INCONCLUSIVE"
-                    elif state == "checkbox_focus" and result["focus"] is False:
+                    elif (not indicator_visible or not distinct or
+                          (state in ("checkbox_focus", "button_focus") and
+                           result["focus"] is not True)):
                         assessment = "INCONCLUSIVE"
                     else:
                         assessment = "PASS"
@@ -486,10 +495,11 @@ def run(cfg, out, scale_tag):
                         disabled_role_contrast=roles["disabled"],
                         popup_role_contrast=roles["popup"],
                         keyboard_space=result["keyboard"], row_click=result["row"],
-                        full_size=f"{image.width()}x{image.height()}",
-                        dpr=image.devicePixelRatio(),
+                        full_size=f"{shots[state].width()}x{shots[state].height()}",
+                        dpr=shots[state].devicePixelRatio(),
                         reason=("SEMANTIC_OR_ROLE_CONTRAST" if assessment=="FAIL"
                                 else "INDICATOR_NOT_VISIBLE" if not indicator_visible
+                                else "CHECKED_UNCHECKED_NOT_DISTINCT" if not distinct
                                 else "FOCUS_VISUAL_NOT_PROVEN" if assessment=="INCONCLUSIVE"
                                 else ""),
                         filename=f"{candidate}_{state}.png",
