@@ -468,9 +468,12 @@ def run(cfg, out, scale_tag):
                     max(1, round(rect.width()*scale)),
                     max(1, round(rect.height()*scale))
                 )
+                unchecked_roi = raw_unchecked.copy(px_rect)
+                checked_roi = raw_checked.copy(px_rect)
+                full_png(unchecked_roi, out / f"{candidate}_indicator_unchecked.png")
+                full_png(checked_roi, out / f"{candidate}_indicator_checked.png")
                 distinct = lab.metrics.difference(
-                    raw_unchecked.copy(px_rect),
-                    raw_checked.copy(px_rect)
+                    unchecked_roi, checked_roi
                 )["changed"]
                 contact_sheet(shots, out / f"contact_sheet_{candidate}.png", candidate)
                 env["candidates"][candidate] = {
