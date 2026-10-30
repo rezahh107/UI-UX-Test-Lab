@@ -340,9 +340,16 @@ def negative_controls(app, cfg, out, font):
     return {
         "joining": joining, "fixture_info": {"valid": valid_info, "malformed": bad_info},
         "indicator": indicator,
-        "indicator_detected_as_inadequate": not indicator["visible"],
+        # An explicit color contract and Qt-painted pixels are two DIFFERENT
+        # observations. Windows11 may override the scoped indicator drawing;
+        # do not mislabel a palette/token check as actual pixel evidence.
         "indicator_declared_ratio": contrast_color("#161B22", "#151A21"),
-        "limit": "Negative controls are synthetic and independent of product behavior",
+        "indicator_detected_as_inadequate": (
+            contrast_color("#161B22", "#151A21") < INDICATOR_THRESHOLD
+        ),
+        "indicator_rendered_low_contrast": not indicator["visible"],
+        "indicator_declared_vs_rendered_agree": not indicator["visible"],
+        "limit": "Declared contrast fixture is deterministic; QWidget-grab pixels may not respect Qt QSS and need visual review",
     }
 
 
@@ -556,7 +563,8 @@ def run(cfg, out, scale_tag):
         f"Expected rows: {len(STYLES)*len(TREATMENTS)*len(STATES)*len(installed)}",
         f"Executed: {executed}; not executed: {len(rows)-executed}; assessments: {assessed}",
         f"Malformed ZWNJ control distinguished: {neg.get('joining',{}).get('expected_distinguished')}",
-        f"Low-indicator-contrast control detected: {neg.get('indicator_detected_as_inadequate')}",
+        f"Low-indicator-contrast declared control detected: {neg.get('indicator_detected_as_inadequate')}",
+        f"Low-indicator Qt pixel contrast: {neg.get('indicator_rendered_low_contrast')}; declared/rendered agreement: {neg.get('indicator_declared_vs_rendered_agree')}",
         "## Per-candidate indicator evidence",
     ] + [
         f"- {name}: unchecked={d['unchecked_indicator']['visible']} "
@@ -575,8 +583,10 @@ def run(cfg, out, scale_tag):
     (out / "summary.md").write_text("\n".join(lines)+"\n", encoding="utf-8")
     print("WHOLE_FORM:", json.dumps({"executed":executed,
         "not_executed":len(rows)-executed, "assessments":assessed,
-        "fonts":installed, "negative_indicator_detected":
-        neg.get("indicator_detected_as_inadequate")}, ensure_ascii=False))
+        "fonts":installed, "negative_indicator_declared_detected":
+        neg.get("indicator_detected_as_inadequate"),
+        "negative_indicator_rendered_low_contrast":
+        neg.get("indicator_rendered_low_contrast")}, ensure_ascii=False))
 
 
 def main():
