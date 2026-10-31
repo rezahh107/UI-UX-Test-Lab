@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QLabel, QLineEdit, QPushButton, QStyle, QStyleFactory, QStyleOptionButton, QVBoxLayout, QWidget,
 )
 from . import source_probe as metrics
+from . import font_runtime
 
 CONFIG = Path(__file__).with_name("target.json")
 STATES = ("idle", "focus", "hover", "pressed", "checked", "unchecked",
@@ -48,6 +49,8 @@ def load_config(path: Path = CONFIG):
     obj = json.loads(raw.decode("utf-8"))
     if obj.get("schema") != "qt-style-probe.lab.v1":
         raise ValueError("Unexpected target configuration schema")
+    if obj.get("default_font_family") != font_runtime.FAMILY:
+        raise ValueError("Only canonical bundled Vazirmatn is the normal default")
     if [s.casefold() for s in obj["requested_styles"]] != ["windows11", "fusion"]:
         raise ValueError("Only windows11 and Fusion are in scope")
     expected = {(False, False), (True, False), (False, True), (True, True)}
@@ -339,7 +342,7 @@ def make_sheet(images, candidate, out):
     sheet.fill(QColor("#F5F6F8"))
     painter = QPainter(sheet)
     painter.setPen(QColor("#1C2939"))
-    painter.setFont(QFont("Arial", 10))
+    painter.setFont(QFont(font_runtime.FAMILY, 10))
     painter.drawText(12, 28, candidate + " — Qt widget.grab(), NOT physical desktop")
     for i, state in enumerate(STATES):
         x, y = (i % cols) * tile_w, 48 + (i // cols) * tile_h
@@ -380,10 +383,8 @@ def negative_control(cfg, app):
 def run(config, config_hash, out, scale_tag):
     app = QApplication([])
     app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
-    fonts = {f.casefold(): f for f in QFontDatabase.families()}
-    requested_font = next((f for f in config["requested_font_families"]
-                           if f.casefold() in fonts), app.font().family())
-    app.setFont(QFont(requested_font, config["font_point_size"]))
+    font_evidence = font_runtime.initialize_font(app, config["font_point_size"])
+    requested_font = font_runtime.FAMILY
     screen = app.primaryScreen()
     if screen is None:
         raise RuntimeError("No Qt primary screen")
@@ -399,6 +400,7 @@ def run(config, config_hash, out, scale_tag):
         "qpa_requested": os.getenv("QT_QPA_PLATFORM"),
         "available_styles": available,
         "requested_font": requested_font, "resolved_font": QFontInfo(app.font()).family(),
+        "canonical_font": font_evidence,
         "font_points": config["font_point_size"],
         "screen_geometry_logical": [screen.geometry().x(), screen.geometry().y(),
                                     screen.geometry().width(), screen.geometry().height()],
@@ -448,6 +450,9 @@ def run(config, config_hash, out, scale_tag):
                 host.show()
                 QCoreApplication.processEvents()
                 QTest.qWait(80)
+                font_runtime.assert_widget_font(host)
+                font_runtime.assert_widget_font(w["approval"])
+                font_runtime.assert_widget_font(w["button"])
                 actual_style = app.style().objectName()
                 palette = app.palette()
                 color_fg = palette.color(QPalette.ColorRole.Text)

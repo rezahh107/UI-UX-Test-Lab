@@ -17,6 +17,7 @@ try:
     from PySide6.QtWidgets import QApplication, QStyle, QStyleOptionButton
     from adapters.qt_style_probe import lab_runner as lab
     from adapters.qt_style_probe import approval_equivalence as eq
+    from adapters.qt_style_probe import font_runtime
     QT = True
 except ImportError:
     QT = False
@@ -27,10 +28,11 @@ class ProductEquivalenceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
+        font_runtime.initialize_font(cls.app)
         cls.cfg, _ = lab.load_config()
 
     def make(self, treatment):
-        return eq.make_equivalent(self.cfg, "Fusion", "Tahoma", treatment)
+        return eq.make_equivalent(self.cfg, "Fusion", font_runtime.FAMILY, treatment)
 
     def test_product_proxy_has_minimum_22_metric_and_full_row_click(self):
         host, controls, proxy = self.make("native")
@@ -103,8 +105,8 @@ class ProductEquivalenceTests(unittest.TestCase):
             out = Path(outdir)
             with patch.object(eq.QStyleFactory, "keys",
                               return_value=["Fusion"]), patch.object(
-                                  eq.QFontDatabase, "families", return_value=["Tahoma"]):
-                eq.run(self.cfg, out, "simulated-font-test")
+                                  eq.QFontDatabase, "families", return_value=["Vazirmatn"]):
+                eq.run(self.cfg, out, "simulated-font-test", compare_tahoma=True)
             with (out / "measurements.csv").open(
                 encoding="utf-8", newline=""
             ) as f:
@@ -113,7 +115,7 @@ class ProductEquivalenceTests(unittest.TestCase):
                 rows = list(reader)
             self.assertEqual(len(rows), 2*2*2*7)
             available = [x for x in rows if x["requested_style"]=="Fusion"
-                         and x["requested_font"]=="Tahoma"]
+                         and x["requested_font"]=="Vazirmatn"]
             self.assertEqual(len(available), 14)
             self.assertTrue(all(x["execution"]=="EXECUTED" for x in available))
             unavailable = [x for x in rows if x not in available]

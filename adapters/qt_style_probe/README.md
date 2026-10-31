@@ -8,7 +8,8 @@ lab_runner.py reuses its difference, contrast and image-pixel measurements.
 No product code or financial data is imported.
 
 The separate target.json contains synthetic form values, window geometry,
-font candidates, colors and upstream identity. For each available windows11
+the canonical font, colors and upstream identity.
+See [the v33.003 bundled-font source/license/loader contract](../../assets/fonts/vazirmatn/v33.003/README.md). For each available windows11
 and Fusion QStyle, four variants keep all non-style variables fixed:
 baseline, palette, card_qss, and palette_card_qss. Card QSS is scoped to
 QFrame#probeSurface; no QSS is applied directly to native buttons,
@@ -24,8 +25,7 @@ PASS/FAIL/INCONCLUSIVE assessment.
 
 ## Windows CI
 
-The ONE added Windows workflow runs only from the dedicated feature branch
-push or workflow_dispatch. It uses windows-2025 and pinned PySide6 6.11.2,
+The existing Windows workflow runs on admitted feature-branch pushes or workflow_dispatch, including the bundled-font PR branch. It uses windows-2025 and pinned PySide6 6.11.2,
 runs the existing unchanged foundation verifier/tests, and commits only
 curated synthetic captures, CSV, environment JSON and short summaries to
 lab-evidence at evidence/qt-style-probe/<run-id>/. It never pushes to main.
@@ -209,8 +209,7 @@ The existing Windows workflow runs this alongside \`lab_runner\`,
 \`primary_action\`, and \`whole_form\` and saves *original-resolution* PNGs,
 small previews, measurements.csv, environment.json and summary.md in
 \`evidence/qt-style-probe/<run-id>/<scale>/approval-equivalence/\` on
-\`lab-evidence\`. Tahoma/Vazirmatn execute only when installed; missing
-fonts or QStyles are explicitly NOT_EXECUTED. Physical Windows 11 and genuine
+\`lab-evidence\`. Vazirmatn is bundled and canonical. Optional --compare-tahoma runs only when Tahoma is available, otherwise NOT_EXECUTED. Missing QStyles remain NOT_EXECUTED. Physical Windows 11 and genuine
 OS Display scales 100/125/150 are **always NOT_EXECUTED** in the hosted
 Windows-2025 CI and cannot be inferred from \`QT_SCALE_FACTOR\`.
 

@@ -24,9 +24,10 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QFrame, QLabel, QStyle,
 
 from . import lab_runner as lab
 from . import primary_action as primary
+from . import font_runtime
 
 STYLES = ("windows11", "Fusion")
-FONTS = ("Tahoma", "Vazirmatn")
+FONTS = (font_runtime.FAMILY,)  # canonical only; explicit --compare-tahoma adds control
 TREATMENTS = ("native", "checkbox_palette", "unchecked_border")
 STATES = ("unchecked", "checkbox_focus", "checked_space", "unchecked_space",
           "checked_row", "unchecked_row", "button_focus", "combo_selected",
@@ -136,7 +137,7 @@ def contact_sheet(snapshots, out, title):
     sheet.fill(QColor("#F6F7F9"))
     p = QPainter(sheet)
     p.setPen(QColor("#152030"))
-    p.setFont(QFont("Arial", 10))
+    p.setFont(QFont(font_runtime.FAMILY, 10))
     p.drawText(8, 25, title + " — reduced preview only")
     for idx, name in enumerate(STATES):
         x, y = idx % 2*w, 38+(idx//2)*h
@@ -353,13 +354,15 @@ def negative_controls(app, cfg, out, font):
     }
 
 
-def run(cfg, out, scale_tag):
+def run(cfg, out, scale_tag, *, compare_tahoma=False):
     out.mkdir(parents=True, exist_ok=True)
     app = QApplication.instance() or QApplication([])
     app.setLayoutDirection(Qt.LayoutDirection.RightToLeft)
     available = {name.casefold(): name for name in QStyleFactory.keys()}
+    font_evidence = font_runtime.initialize_font(app, cfg["font_point_size"])
     families = {name.casefold(): name for name in QFontDatabase.families()}
-    installed = [families[name.casefold()] for name in FONTS if name.casefold() in families]
+    requested_fonts = FONTS + (("Tahoma",) if compare_tahoma else ())
+    installed = [families[name.casefold()] for name in requested_fonts if name.casefold() in families]
     env = {
         "source_sha": os.getenv("GITHUB_SHA"), "run_id": os.getenv("GITHUB_RUN_ID"),
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
@@ -367,8 +370,10 @@ def run(cfg, out, scale_tag):
             sys.getwindowsversion().build if sys.platform == "win32" else None,
         "qt": qVersion(), "pyside": PYSIDE_VERSION,
         "qpa": app.platformName(), "available_styles": list(available.values()),
-        "requested_fonts": list(FONTS), "installed_tested_fonts": installed,
-        "missing_fonts": [f for f in FONTS if f.casefold() not in families],
+        "requested_fonts": list(requested_fonts), "installed_tested_fonts": installed,
+        "canonical_font": font_evidence,
+        "comparison_mode": "non-default Tahoma comparison" if compare_tahoma else "canonical",
+        "missing_fonts": [f for f in requested_fonts if f.casefold() not in families],
         "per_glyph_fallback_proven": False,
         "qt_scale_factor": os.getenv("QT_SCALE_FACTOR"),
         "actual_os_display_scale_verified": False, "scale_tag": scale_tag,
@@ -426,6 +431,9 @@ def run(cfg, out, scale_tag):
                             f"{style_name}_{font_name}_{phrase}"
                         ] = fixture
                 host, controls = lab.build_host(cfg, cfg["variants"][0])
+                if font_name == font_runtime.FAMILY:
+                    font_runtime.assert_widget_font(host)
+                    font_runtime.assert_widget_font(controls["approval"])
                 secondary_buttons = [
                     b for b in host.findChildren(QPushButton)
                     if b.text() == cfg["fields"]["secondary"]
@@ -439,6 +447,10 @@ def run(cfg, out, scale_tag):
                 host.show()
                 QCoreApplication.processEvents()
                 QTest.qWait(80)
+                if font_name == font_runtime.FAMILY:
+                    font_runtime.assert_widget_font(host)
+                    font_runtime.assert_widget_font(cb)
+                    font_runtime.assert_widget_font(controls["button"])
                 resolved = QFontInfo(cb.font()).family()
                 roles = role_contrasts(controls)
                 shots = {}
@@ -579,7 +591,7 @@ def run(cfg, out, scale_tag):
         "## Limits",
         "- Full PNGs are Qt widget grabs; contact sheets are resized previews.",
         "- QPalette role contrast is not font/glyph pixel contrast.",
-        "- Only installed fonts are tested, per-glyph fallback not established.",
+        "- Canonical v33.003 font is registered from bundled verified TTFs; per-glyph fallback not established.",
         "- Native Windows 11 hardware and physical 100/125/150% scale are NOT_PROVEN.",
         "- This is synthetic Lab evidence, not Bank2Odoo product acceptance.",
     ]
@@ -596,9 +608,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--scale-tag", required=True)
+    parser.add_argument("--compare-tahoma", action="store_true", help="Explicit non-default system-font comparison")
     args = parser.parse_args()
     cfg, _ = lab.load_config()
-    run(cfg, args.output, args.scale_tag)
+    run(cfg, args.output, args.scale_tag, compare_tahoma=args.compare_tahoma)
 
 
 if __name__ == "__main__":

@@ -30,4 +30,6 @@ On Windows, `py -3 scripts/verify_foundation.py` is an equivalent invocation if 
 - [Foundation CI](.github/workflows/foundation.yml): repeats the verifier on changes; does not run third-party projects.
 - `.gitattributes`, `.editorconfig`, `.gitignore`: version-control, editor, and local-artifact hygiene.
 
+The [bundled Vazirmatn v33.003 font contract](assets/fonts/vazirmatn/v33.003/README.md) is mandatory for normal Qt experiments; Windows does not need a system-installed font.
+
 One focused Windows adapter is available: [Qt native styling probe](adapters/qt_style_probe/README.md). It uses only synthetic data and depends on PySide6 when run. Other platform-specific environments remain absent.
