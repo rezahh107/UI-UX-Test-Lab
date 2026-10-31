@@ -1,0 +1,130 @@
+name: Temporary Vazirmatn Same-Family Collision Verification
+
+on:
+  push:
+    branches:
+      - verification/qt-vazirmatn-collision-20261031
+
+permissions:
+  contents: read
+
+jobs:
+  collision:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    env:
+      QT_QPA_PLATFORM: windows
+      QT_SCALE_FACTOR: "1"
+    steps:
+      - name: Checkout verification-only harness
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Checkout exact, unchanged production source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          ref: 30b68a88d9cb6e7d97ef61cc06fa653cd1fc8d4d
+          path: source
+          persist-credentials: false
+
+      - name: Checkout official competitor tag
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          repository: rastikerdar/vazirmatn
+          ref: v32.102
+          path: competitor-src
+          persist-credentials: false
+
+      - name: Verify exact source and evidence origin
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $sourceSha = (git -C source rev-parse HEAD).Trim()
+          $verificationSha = (git rev-parse HEAD).Trim()
+          $upstreamSha = (git -C competitor-src rev-parse HEAD).Trim()
+          Write-Host "EXACT_SOURCE_SHA=$sourceSha"
+          Write-Host "VERIFICATION_SHA=$verificationSha"
+          Write-Host "COMPETITOR_TAG_COMMIT=$upstreamSha"
+          if ($sourceSha -ne "30b68a88d9cb6e7d97ef61cc06fa653cd1fc8d4d") {
+            throw "Wrong production source commit"
+          }
+          if ($verificationSha -ne $env:GITHUB_SHA) {
+            throw "Wrong verification commit"
+          }
+          if ((git -C source status --porcelain --untracked-files=no)) {
+            throw "Production source checkout is dirty"
+          }
+          if (!(Test-Path competitor-src/fonts/ttf/Vazirmatn-Regular.ttf) -or !(Test-Path competitor-src/fonts/ttf/Vazirmatn-SemiBold.ttf)) {
+            throw "Official competitor assets missing"
+          }
+
+      - name: Install pinned Qt runtime
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check "PySide6-Essentials==6.11.2"
+          if ($LASTEXITCODE -ne 0) { throw "Pinned Qt runtime install failed" }
+
+      - name: Run isolated A and B subprocesses
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $out = Join-Path $env:RUNNER_TEMP "qt-vazirmatn-collision"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          python verification/qt-vazirmatn-collision/qt_vazirmatn_collision_probe.py --repo source --competitor competitor-src/fonts/ttf --out "$out" --scenarios A B 2>&1 | Tee-Object -FilePath (Join-Path $out "AB-console.log")
+          if ($LASTEXITCODE -ne 0) { throw "A/B harness failure; inspect uploaded artifacts" }
+          Copy-Item (Join-Path $out "comparison.json") (Join-Path $out "AB-comparison.json") -Force
+
+      - name: Attempt genuine Windows per-user installed-font scenario C
+        if: success()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $out = Join-Path $env:RUNNER_TEMP "qt-vazirmatn-collision"
+          $fontDir = Join-Path $env:LOCALAPPDATA "Microsoft/Windows/Fonts"
+          try {
+            New-Item -ItemType Directory -Path $fontDir -Force | Out-Null
+            $reg = "HKCU:\Software\Microsoft\Windows NT\CurrentVersion\Fonts"
+            New-Item -Path $reg -Force | Out-Null
+            foreach ($weight in @("Regular", "SemiBold")) {
+              $filename = "Vazirmatn-$weight.ttf"
+              $target = Join-Path $fontDir $filename
+              Copy-Item -Path (Join-Path "competitor-src/fonts/ttf" $filename) -Destination $target -Force
+              New-ItemProperty -Path $reg -Name "Vazirmatn $weight (TrueType)" -PropertyType String -Value $target -Force | Out-Null
+            }
+            Add-Type -TypeDefinition @'
+          using System;
+          using System.Runtime.InteropServices;
+          public static class TempFontInstall {
+            [DllImport("gdi32.dll", CharSet=CharSet.Unicode)]
+            public static extern int AddFontResourceW(string path);
+          }
+          '@
+            foreach ($weight in @("Regular", "SemiBold")) {
+              $filename = "Vazirmatn-$weight.ttf"
+              $target = Join-Path $fontDir $filename
+              $count = [TempFontInstall]::AddFontResourceW($target)
+              Write-Host "OS font resource registration $weight : $count"
+            }
+            python -c "from PySide6.QtWidgets import QApplication; from PySide6.QtGui import QFontDatabase; import sys; app=QApplication([]); has='Vazirmatn' in QFontDatabase.families(); print('C_OS_INSTALL_PRECONDITION=',has); sys.exit(0 if has else 4)"
+            if ($LASTEXITCODE -ne 0) {
+              "NOT_EXECUTED: Qt could not discover the freshly installed Windows per-user font in a new process." | Set-Content -Path (Join-Path $out "C_NOT_EXECUTED.txt") -Encoding utf8
+              exit 0
+            }
+            python verification/qt-vazirmatn-collision/qt_vazirmatn_collision_probe.py --repo source --competitor competitor-src/fonts/ttf --out "$out" --scenarios C 2>&1 | Tee-Object -FilePath (Join-Path $out "C-console.log")
+            if ($LASTEXITCODE -ne 0) {
+              "ATTEMPTED_UNVERIFIED: Scenario C harness rejected the installed-font fixture or failed; inspect C-console.log." | Set-Content -Path (Join-Path $out "C_UNVERIFIED.txt") -Encoding utf8
+            }
+          } catch {
+            "NOT_EXECUTED: Windows hosted-runner font installation was not supported: $_" | Set-Content -Path (Join-Path $out "C_NOT_EXECUTED.txt") -Encoding utf8
+            Write-Host "C provision unavailable: $_"
+          }
+
+      - name: Upload independent verification artifacts only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vazirmatn-collision-${{ github.run_id }}
+          path: ${{ runner.temp }}/qt-vazirmatn-collision/
+          if-no-files-found: warn
+          retention-days: 14
